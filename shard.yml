@@ -1,0 +1,12 @@
+name: rethinkdb-orm
+version: 1.0.0
+
+dependencies:
+  active-model:
+    github: spider-gazelle/active-model
+  rethinkdb-lite:
+    github: lbguilherme/rethinkdb-lite
+
+development_dependencies:
+  ameba:
+    github: veelenga/ameba

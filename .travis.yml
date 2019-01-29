@@ -1,0 +1,8 @@
+sudo: required
+language: crystal
+addons:
+  rethinkdb: '2.3'
+install:
+  - shards install
+script:
+  - crystal spec

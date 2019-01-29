@@ -1,0 +1,9 @@
+doc
+lib
+bin
+.crystal
+.shards
+app
+*.dwarf
+.DS_Store
+*.lock
