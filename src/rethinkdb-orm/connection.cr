@@ -1,4 +1,4 @@
-include "rethinkdb-lite"
+include "crystal-rethinkdb"
 include "habitat"
 
 class Connection < self
