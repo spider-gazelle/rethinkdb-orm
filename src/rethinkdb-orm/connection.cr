@@ -3,15 +3,21 @@ include "habitat"
 
 class Connection < self
   Habitat.create do
-    setting host : String
-    setting port : Int32
-    setting db : String
-    setting user : String
-    setting password : String
+    setting host : String = "localhost"
+    setting port : Int32 = 28015
+    setting db : String = "test"
+    setting user : String = "admin"
+    setting password : String = ""
   end
 
-  def db=(db : RethinkDB::Connection)
-    @db ||= RethinkDB::Connection.new()
+  def db
+    opts = {
+      host: settings.host,
+      port: settings.port,
+      db: settings.db,
+      user: settings.user,
+      password: settings.password,
+    }
+    @db ||= RethinkDB::Connection.new(opts)
   end
-
 end
