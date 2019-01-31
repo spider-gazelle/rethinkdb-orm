@@ -4,8 +4,10 @@ version: 1.0.0
 dependencies:
   active-model:
     github: spider-gazelle/active-model
-  rethinkdb-lite:
-    github: lbguilherme/rethinkdb-lite
+  crystal-rethinkdb:
+    github: kingsleyh/crystal-rethinkdb
+  habitat:
+    github: luckyframework/habitat
 
 development_dependencies:
   ameba:

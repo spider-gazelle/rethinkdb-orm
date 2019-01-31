@@ -1,6 +1,7 @@
-require "active-model"
-require "rethinkdb-lite"
+module RethinkDB
 
-abstract class RethinkDB::Model < ActiveModel::Model
-  # TODO::
+  def load?(id)
+
+    nil
+  end
 end
