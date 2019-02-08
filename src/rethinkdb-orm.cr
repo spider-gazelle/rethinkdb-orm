@@ -1,5 +1,4 @@
-module RethinkDB
-  def load?(id)
-    nil
-  end
+module RethinkOrm
 end
+
+require "./rethinkdb-orm/base"

@@ -1,98 +1,40 @@
+require "random"
+require "time"
 
+class RethinkORM::IdGenerator
+  BASE_65 = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+             '-', '_', '~']
+  TIME_OFFSET = 1388534400_i64 # Time.utc(2014, 1, 1).to_unix
 
-class IdGenerator
+  # Generate a time-sortable and unique (with high probability) primary key
+  def self.next(table_name)
+    time = Time.now
+    timestamp = (time.to_unix - TIME_OFFSET) * 1_000_000 + time.to_unix_ms
 
-  BASE_65 = {('0'..'9'), ('A'..'Z'), ('a'..'z')}.flat_map { |r| r.to_a } + ['-', '_', '~']
-  TIME_OFFSET = Time.utc(2014, 1, 1).to_i
-  SEQUENCE_SHIFT
+    # Random tail renders it improbable that there will ever be an ID clash amongst nodes
+    random_tail = (Random.rand(99999) + 1).to_s.rjust(5, '0')
+    postfix = base_encode("#{timestamp}#{random_tail}", BASE_65)
 
-  class << self
-    def from
-    def next
+    "#{table_name}-#{postfix}"
+  end
+
+  # Converts a string of base10 digits to string in arbitrary base
+  def self.base_encode(number, base)
+    base_size = base.size
+
+    if number.is_a?(String)
+      number = number.chars.reduce(0) { |acc, digit| acc * 10 + digit.to_i }
     end
-  end
-end
 
-
-
-  # 30 bits timestamp with 1s resolution -> We overflow in year 2048. Good enough.
-  # Math.log(Time.parse('2048-01-01').to_f - TIME_OFFSET)/Math.log(2) = 29.999
-  TIMESTAMP_BITS = 30
-
-  # 14 bits of sequence number. max 16k values per 1s slices.
-  # We want something >10k because we want to be able to do high speed inserts
-  # on a single process for future benchmarks.
-  SEQUENCE_ITS = 14
-
-  # 24 bits of machine id
-  # 0.1% of chance to have a collision with 183 servers:
-  # Math.sqrt(-2*(2**24)*Math.log(0.999)) = 183.2
-  # 1% of chance to have a collision with ~580 servers.
-  # When using more than 500 machines, it's therefore a good
-  # idea to set the machine_id manually to avoid collisions.
-  # XXX This is referenced in nobrainer/config.rb#default_machine_id
-  MACHINE_ID_BITS = 24
-
-  # 15 bits for the current pid. We wouldn't need it if the sequence number was
-  # on a piece of shared memory :)
-  PID_BITS = 15
-
-  # Total: 83 bits
-  # With 14 digits in [A-Za-z0-9], we can represent 83 bits:
-  # Math.log(62**14)/Math.log(2) = 83.35
-  ID_STR_LENGTH = 14
-
-  TIMESTAMP_MASK  = (1 <<  TIMESTAMP_BITS)-1
-  SEQUENCE_MASK   = (1 <<   SEQUENCE_BITS)-1
-  MACHINE_ID_MASK = (1 << MACHINE_ID_BITS)-1
-  PID_MASK        = (1 <<        PID_BITS)-1
-
-  PID_SHIFT        = 0
-  MACHINE_ID_SHIFT = PID_SHIFT + PID_BITS
-  SEQUENCE_SHIFT   = MACHINE_ID_SHIFT + MACHINE_ID_BITS
-  TIMESTAMP_SHIFT  = SEQUENCE_SHIFT + SEQUENCE_BITS
-
-  def self._generate
-    timestamp = (Time.now.to_i - TIME_OFFSET) & TIMESTAMP_MASK
-
-    unless @last_timestamp == timestamp
-      # more noise is better in the ID, but we prefer to avoid
-      # wrapping the sequences so that Model.last on a single
-      # machine returns the latest created document.
-      @first_sequence = sequence = rand(SEQUENCE_MASK/2)
-      @last_timestamp = timestamp
-    else
-      sequence = (@sequence + 1) & SEQUENCE_MASK
-      raise Retry if @first_sequence == sequence
+    converted = [] of Char
+    until number.zero?
+      number, digit = number.divmod(base_size)
+      converted.push(base[digit])
     end
-    @sequence = sequence
 
-    machine_id = NoBrainer::Config.machine_id & MACHINE_ID_MASK
-
-    pid = Process.pid & PID_MASK
-
-    (timestamp << TIMESTAMP_SHIFT) | (sequence << SEQUENCE_SHIFT) |
-      (machine_id << MACHINE_ID_SHIFT) | (pid << PID_SHIFT)
-  rescue Retry
-    sleep 0.1
-    retry
-  end
-
-  def self.convert_to_alphanum(id)
-    result = []
-    until id.zero?
-      id, r = id.divmod(BASE_TABLE.size)
-      result << BASE_TABLE[r]
-    end
-    result.reverse.join.rjust(ID_STR_LENGTH, BASE_TABLE[0])
-  end
-
-  @lock = Mutex.new
-  def self.generate
-    convert_to_alphanum(@lock.synchronize { _generate })
-  end
-
-  def self.field_type
-    String
+    converted << base[0] if converted.empty?
+    converted.reverse.join
   end
 end
