@@ -1,5 +1,4 @@
 module RethinkORM::Table
-
   SETTINGS = {} of Nil => Nil
 
   # Macro to manually set the table name of the model
@@ -13,6 +12,10 @@ module RethinkORM::Table
     @@table_name = "{{ table_name }}"
 
     def self.table_name
+      @@table_name
+    end
+
+    def table_name
       @@table_name
     end
   end

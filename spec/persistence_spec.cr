@@ -141,7 +141,7 @@ describe RethinkORM::Persistence do
     begin
       model.save!
     rescue e : RethinkORM::Error::RecordInvalid
-        (e.record).should eq model
+      (e.record).should eq model
     end
 
     model.name = "bob"
@@ -156,7 +156,7 @@ describe RethinkORM::Persistence do
     begin
       model.save!
     rescue e : RethinkORM::Error::RecordInvalid
-        (e.record).should eq model
+      (e.record).should eq model
     end
 
     model.age = "23" # This value will be coerced
@@ -188,7 +188,7 @@ describe RethinkORM::Persistence do
 
     model.reload
     (model.changed?).should eq_false
-    (model.id).should eq_id
+    (model.id).should eq id
 
     model.destroy
     (model.destroyed?).should eq_true

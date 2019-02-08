@@ -4,6 +4,7 @@ require "./id_generator"
 require "./connection"
 
 module RethinkORM::Persistence
+  @@table_created = false
 
   getter? destroyed = false
 
@@ -16,7 +17,6 @@ module RethinkORM::Persistence
   end
 
   macro included
-
     # Creates the model
     #
     # Raises a RethinkORM::Error::DocumentNotSaved if failed to created
@@ -68,7 +68,7 @@ module RethinkORM::Persistence
     }.merge(options)
 
     assign_attributes(*attributes)
-    __update
+    __update(**options)
   end
 
   # Updates the model in place
@@ -80,18 +80,16 @@ module RethinkORM::Persistence
     self
   end
 
-  def destroy(**options)
+  def destroy
     return self if destroyed?
 
-    options = {
-      non_atomic: false,
-    }.merge(options)
-
     run_destroy_callbacks do
-      Connection.raw do |q|
-        q.table(@@table_name)
-          .get(@__key__)
-          .delete
+      table_guard do
+        Connection.raw do |q|
+          q.table(@@table_name)
+            .get(@__key__)
+            .delete
+        end
       end
       clear_changes_information
       self
@@ -104,10 +102,12 @@ module RethinkORM::Persistence
 
     run_update_callbacks do
       run_save_callbacks do
-        response = Connection.raw do |q|
-          q.table(@@table_name)
-            .get(@__key__)
-            .update(changed_attributes, **options)
+        response = table_guard do
+          Connection.raw do |q|
+            q.table(@@table_name)
+              .get(@__key__)
+              .update(changed_attributes, **options)
+          end
         end
 
         # TODO: Extend active-model to include previous changes
@@ -123,25 +123,38 @@ module RethinkORM::Persistence
   protected def __create(**options)
     run_create_callbacks do
       run_save_callbacks do
-
         # TODO: Allow user to tag an attribute as primary key
         id = @id || self.uuid_generator.next(self)
-
         document = self.attributes.merge({:id => id})
 
-        response = Connection.raw do |q|
-          q.table(@@table_name).insert(document, **options) 
+        response = table_guard do
+          Connection.raw do |q|
+            q.table(@@table_name).insert(document, **options)
+          end
         end
 
+        generated_key = response["generated_keys"]?.try(&.[0]?).try(&.to_s)
+
         # Set primary key
-        @__key__ = response["generated_keys"][0]?.try(&.to_s) || id
+        @__key__ = generated_key || id
 
         # TODO: Create associations
         clear_changes_information
 
-        inserted = response["inserted"].as_i? || 0
+        inserted = response["inserted"]?.try(&.as_i?) || 0
         inserted > 0
       end
     end
+  end
+
+  # Creates table if not present
+  #
+  # Yields the block
+  protected def table_guard(&block)
+    @@table_created = @@table_created || Connection.raw(&.table_list).as_a.map(&.to_s).includes?(@@table_name)
+    unless @@table_created
+      Connection.raw(&.table_create(@@table_name))
+    end
+    yield
   end
 end

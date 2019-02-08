@@ -10,44 +10,45 @@ end
 
 describe RethinkORM::Base do
   it "should be comparable to other objects" do
-
-    base = BaseTest.new(name: "joe")
-    base1 = BaseTest.new(name: "joe")
+    base = BaseTest.create(name: "joe")
+    base1 = BaseTest.create(name: "joe")
 
     base.should eq base
     base.should be base
+
     base.should_not eq base1
 
+    pp base
     same_base = BaseTest.find base.id
     base.should eq same_base
     base.should_not be same_base
     base1.should_not eq same_base
 
-    # base.destroy
-    # base1.destroy
+    base.destroy
+    base1.destroy
   end
 
   pending "should load database responses" do
     base = BaseTest.create(name: "joe")
+
     base_found = raw do |q|
       q.table(base.table_name).find(base.id)
     end
 
-    resp.key.should eq base.id
-    base_loaded = BaseTest.new(resp)
+    base_found.id.to_s.should eq base.id
 
-    base_loaded.should eq base
-    base_loaded.should_not be base
+    base_found.should eq base
+    base_found.should_not be base
     base.destroy
   end
 
   pending "should not load objects if there is a type mismatch" do
     base = BaseTest.create(name: "joe")
-    { CompareTest.find_by_id(base.id) }.should expect_raises(RuntimeError)
+    {CompareTest.find_by_id(base.id)}.should expect_raises(RuntimeError)
     base.destroy
   end
 
-  it "should support serialisation" do
+  pending "should support serialisation" do
     base = BaseTest.create(name: "joe")
     base_id = base.id
     base.to_json.should eq ({name: "joe", id: base_id}.to_json)

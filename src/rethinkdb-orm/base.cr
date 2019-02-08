@@ -7,7 +7,6 @@ require "./queries"
 require "./table"
 require "./connection"
 
-
 abstract class RethinkORM::Base < ActiveModel::Model
   include ActiveModel::Validation
   include ActiveModel::Callbacks
@@ -20,8 +19,11 @@ abstract class RethinkORM::Base < ActiveModel::Model
   @__key__ : String | Nil
   @id : String | Nil
 
-  macro finished
+  macro inherited
     __process_table__
+  end
+
+  macro finished
     # __process_persistence__
     # __process_queries__
   end
