@@ -31,6 +31,30 @@ describe RethinkORM::Persistence do
     model.persisted?.should be_false
   end
 
+  it "should destroy a model" do
+    model = BasicModel.new(age: 34, name: "bob", address: "somewhere")
+
+    model.new_record?.should be_true
+    model.destroyed?.should be_false
+    model.persisted?.should be_false
+
+    model.save.should be_true
+
+    model.persisted?.should be_true
+    model.new_record?.should be_false
+    model.destroyed?.should be_false
+
+    loaded_model = BasicModel.find(model.id)[0]?
+    loaded_model.should eq model
+
+    model.destroy
+    model.new_record?.should be_false
+    model.destroyed?.should be_true
+    model.persisted?.should be_false
+
+    BasicModel.find(model.id).empty?.should be_true
+  end
+
   it "should save a model with defaults" do
     model = ModelWithDefaults.new
 

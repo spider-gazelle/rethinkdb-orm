@@ -8,7 +8,7 @@ describe RethinkORM::IdGenerator do
     5.times do
       spawn do
         ids = [] of String
-        1000.times { ids << RethinkORM::IdGenerator.next(model) }
+        500.times { ids << RethinkORM::IdGenerator.next(model) }
         id_channel.send ids
       end
     end

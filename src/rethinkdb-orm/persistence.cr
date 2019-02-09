@@ -90,15 +90,16 @@ module RethinkORM::Persistence
 
     run_destroy_callbacks do
       table_guard do
-        Connection.raw do |q|
+        response = Connection.raw do |q|
           q.table(@@table_name)
             .get(@id)
-          # .delete
+            .delete
         end
+        deleted = response["deleted"]?.try(&.as_i?) || 0
+        @destroyed = deleted > 0
+        clear_changes_information if @destroyed
+        self
       end
-      clear_changes_information
-      @destroyed = true
-      self
     end
   end
 
