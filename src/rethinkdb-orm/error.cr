@@ -1,5 +1,5 @@
 class RethinkORM::Error < Exception
-  getter :message
+  getter message
 
   def initialize(@message : String? = "")
     super(message)

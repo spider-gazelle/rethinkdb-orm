@@ -4,17 +4,26 @@ require "./id_generator"
 require "./connection"
 
 module RethinkORM::Persistence
+  # Flag to allow lazy querying of table status
   @@table_created = false
 
-  getter? destroyed = false
+  # property id
+  # @id : String | Nil
 
+  # Id generated on save or set on load
   def new_record?
-    @__key__.nil?
+    if destroyed?
+      false
+    else
+      @id.nil?
+    end
   end
 
   def persisted?
     !(new_record? || destroyed?)
   end
+
+  getter? destroyed = false
 
   macro included
     # Creates the model
@@ -46,7 +55,6 @@ module RethinkORM::Persistence
     return false unless valid?
 
     new_record? ? __create(**options) : __update(**options)
-    self
   end
 
   # Saves the model.
@@ -55,45 +63,64 @@ module RethinkORM::Persistence
   # the existing record gets updated.
   # Raises RethinkORM::Error:DocumentInvalid on validation failure
   def save!(**options)
-    raise Error::DocumentInvalid.new("Failed to save the document", self) unless self.save(**options)
+    raise Error::DocumentInvalid.new("Failed to save the document") unless self.save(**options)
     self
   end
 
   # Updates the model
   #
   # Non-atomic updates are required for multidocument updates
-  def update(*attributes, **options)
-    options = {
-      non_atomic: false,
-    }.merge(options)
-
-    assign_attributes(*attributes)
-    __update(**options)
+  def update(**attributes)
+    assign_attributes(**attributes)
+    save
   end
 
   # Updates the model in place
   #
   # Throws Error::DocumentInvalid on update failure
-  def update!(*attributes, **options)
-    updated = self.update(*attributes, **options)
+  def update!(**attributes)
+    updated = self.update(**attributes)
     raise Error::DocumentInvalid.new("Failed to update the document", self) unless updated
     self
   end
 
   def destroy
     return self if destroyed?
+    return self if new_record?
 
     run_destroy_callbacks do
       table_guard do
         Connection.raw do |q|
           q.table(@@table_name)
-            .get(@__key__)
-            .delete
+            .get(@id)
+          # .delete
         end
       end
       clear_changes_information
+      @destroyed = true
       self
     end
+  end
+
+  # Reloads the record from the database.
+  #
+  # Finds record by its key and modifies the receiver in-place:
+  def reload
+    raise Error::DocumentNotSaved.new("Cannot reload unpersisted document") unless persisted?
+
+    loaded = {{ @type }}.find(@id)[0]
+
+    # TODO: Make this faster by updating active-model to accept generic hashes
+    new_attributes = loaded.attributes.reduce({} of String => String) do |attrs, kv|
+      key, value = kv
+      attrs[key.to_s] = value.to_s
+      attrs
+    end
+    assign_attributes(new_attributes)
+
+    # TODO: reset_associations
+    clear_changes_information
+    self
   end
 
   protected def __update(**options)
@@ -105,16 +132,16 @@ module RethinkORM::Persistence
         response = table_guard do
           Connection.raw do |q|
             q.table(@@table_name)
-              .get(@__key__)
-              .update(changed_attributes, **options)
+              .get(@id)
+              .update(self.attributes, **options)
           end
         end
 
         # TODO: Extend active-model to include previous changes
         # TODO: Update associations
         clear_changes_information
-        replaced = response["replaced"].as_i? || 0
-        updated = response["updated"].as_i? || 0
+        replaced = response["replaced"]?.try(&.as_i?) || 0
+        updated = response["updated"]?.try(&.as_i?) || 0
         replaced > 0 || updated > 0
       end
     end
@@ -123,20 +150,18 @@ module RethinkORM::Persistence
   protected def __create(**options)
     run_create_callbacks do
       run_save_callbacks do
-        # TODO: Allow user to tag an attribute as primary key
-        id = @id || self.uuid_generator.next(self)
-        document = self.attributes.merge({:id => id})
+        # TODO: Allow user to tag an attribute as primary key.
+        #       Requires either changing default primary key or using secondary index
+        @id ||= self.uuid_generator.next(self)
 
         response = table_guard do
           Connection.raw do |q|
-            q.table(@@table_name).insert(document, **options)
+            q.table(@@table_name).insert(self.attributes, **options)
           end
         end
 
-        generated_key = response["generated_keys"]?.try(&.[0]?).try(&.to_s)
-
-        # Set primary key
-        @__key__ = generated_key || id
+        # Set primary key if receiveing generated_key
+        @id ||= response["generated_keys"]?.try(&.[0]?).try(&.to_s)
 
         # TODO: Create associations
         clear_changes_information

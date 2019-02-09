@@ -1,214 +1,202 @@
 require "./spec_helper"
 
 describe RethinkORM::Persistence do
-  pending "should save a model" do
+  it "should save a model" do
     model = BasicModel.new
 
-    model.new_record?.should eq_true
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_false
+    model.new_record?.should be_true
+    model.destroyed?.should be_false
+    model.persisted?.should be_false
 
-    model.name = "bob"
-    (model.name).should eq "bob"
-
-    model.address = "somewhere"
     model.age = 34
+    model.name = "bob"
+    model.address = "somewhere"
 
-    (model.new_record?).should eq_true
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_false
+    model.new_record?.should be_true
+    model.destroyed?.should be_false
+    model.persisted?.should be_false
 
-    result = model.save
-    (result).should eq_true
+    model.save.should be_true
 
-    (model.new_record?).should eq_false
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_true
+    model.persisted?.should be_true
+    model.new_record?.should be_false
+    model.destroyed?.should be_false
+
+    loaded_model = BasicModel.find(model.id)[0]?
+    loaded_model.should eq model
 
     model.destroy
-    (model.new_record?).should eq_false
-    (model.destroyed?).should eq_true
-    (model.persisted?).should eq_false
+    model.new_record?.should be_false
+    model.destroyed?.should be_true
+    model.persisted?.should be_false
   end
 
-  pending "should save a model with defaults" do
+  it "should save a model with defaults" do
     model = ModelWithDefaults.new
 
-    (model.name).should eq "bob"
-    (model.age).should eq 23
-    (model.address).should eq nil
+    model.name.should eq "bob"
+    model.age.should eq 23
+    model.address.should eq nil
 
-    (model.new_record?).should eq_true
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_false
+    model.new_record?.should be_true
+    model.destroyed?.should be_false
+    model.persisted?.should be_false
 
-    result = model.save
-    (result).should eq_true
+    model.save.should be_true
 
-    (model.new_record?).should eq_false
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_true
+    model.new_record?.should be_false
+    model.destroyed?.should be_false
+    model.persisted?.should be_true
+
+    loaded_model = ModelWithDefaults.find(model.id)[0]
+    loaded_model.should eq model
 
     model.destroy
-    (model.new_record?).should eq_false
-    (model.destroyed?).should eq_true
-    (model.persisted?).should eq_false
+    model.new_record?.should be_false
+    model.destroyed?.should be_true
+    model.persisted?.should be_false
   end
 
-  pending "should execute callbacks" do
+  it "should execute callbacks" do
     model = ModelWithCallbacks.new
 
     # Test initialize
-    (model.name).should eq nil
-    (model.age).should eq 10
-    (model.address).should eq nil
+    model.name.should eq nil
+    model.age.should eq 10
+    model.address.should eq nil
 
-    (model.new_record?).should eq_true
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_false
+    model.new_record?.should be_true
+    model.destroyed?.should be_false
+    model.persisted?.should be_false
 
     # Test create
-    result = model.save
-    (result).should eq_true
+    model.save.should be_true
 
-    (model.name).should eq "bob"
-    (model.age).should eq 10
-    (model.address).should eq "23"
+    model.name.should eq "bob"
+    model.age.should eq 10
+    model.address.should eq "23"
 
     # Test Update
     model.address = "other"
-    (model.address).should eq "other"
-    model.save
+    model.address.should eq "other"
+    model.save.should be_true
 
-    (model.name).should eq "bob"
-    (model.age).should eq 30
-    (model.address).should eq "23"
+    model.name.should eq "bob"
+    model.age.should eq 30
+    model.address.should eq "23"
 
     # Test destroy
     model.destroy
-    (model.new_record?).should eq_false
-    (model.destroyed?).should eq_true
-    (model.persisted?).should eq_false
+    model.new_record?.should be_false
+    model.destroyed?.should be_true
+    model.persisted?.should be_false
 
-    (model.name).should eq "joe"
+    model.name.should eq "joe"
   end
 
   pending "should skip callbacks when updating columns" do
     model = ModelWithCallbacks.new
 
     # Test initialize
-    (model.name).should eq nil
-    (model.age).should eq 10
-    (model.address).should eq nil
+    model.name.should eq nil
+    model.age.should eq 10
+    model.address.should eq nil
 
-    (model.new_record?).should eq_true
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_false
+    model.new_record?.should be_true
+    model.destroyed?.should be_false
+    model.persisted?.should be_false
 
     # Test create
     result = model.save
-    (result).should eq_true
+    result.should be_true
 
-    (model.name).should eq "bob"
-    (model.age).should eq 10
-    (model.address).should eq "23"
+    model.name.should eq "bob"
+    model.age.should eq 10
+    model.address.should eq "23"
 
     # Test Update
     model.update_columns(address: "other")
-    (model.address).should eq "other"
+    model.address.should eq "other"
     loaded = ModelWithCallbacks.find model.id
-    (loaded.address).should eq "other"
+    loaded[0].address.should eq "other"
 
     # Test delete skipping callbacks
     model.delete
-    (model.new_record?).should eq_false
-    (model.destroyed?).should eq_true
-    (model.persisted?).should eq_false
+    model.new_record?.should be_false
+    model.destroyed?.should be_true
+    model.persisted?.should be_false
 
-    (model.name).should eq "bob"
+    model.name.should eq "bob"
   end
 
-  pending "should perform validations" do
+  it "should perform validations" do
     model = ModelWithValidations.new
 
-    (model.valid?).should eq_false
+    model.valid?.should be_false
 
     # Test create
     result = model.save
-    (result).should eq_false
-    (model.errors.count).should eq 2
+    result.should be_false
+    model.errors.size.should eq 2
 
-    begin
+    expect_raises(RethinkORM::Error::DocumentInvalid) do
       model.save!
-    rescue e : RethinkORM::Error::RecordInvalid
-      (e.record).should eq model
     end
 
     model.name = "bob"
     model.age = 23
-    (model.valid?).should eq_true
-    (model.save).should eq_true
+    model.valid?.should be_true
+    model.save.should be_true
 
     # Test update
     model.name = nil
-    (model.valid?).should eq_false
-    (model.save).should eq_false
-    begin
+    model.valid?.should be_false
+    model.save.should be_false
+    expect_raises(RethinkORM::Error::DocumentInvalid) do
       model.save!
-    rescue e : RethinkORM::Error::RecordInvalid
-      (e.record).should eq model
     end
 
-    model.age = "23" # This value will be coerced
+    model.age = 23
     model.name = "joe"
-    (model.valid?).should eq_true
-    (model.save!).should eq model
-
-    # coercion will fail here
-    begin
-      model.age = "a23"
-      (false).should eq_true
-    rescue e : ArgumentError
-    end
+    model.valid?.should be_true
+    model.save!.should eq model
 
     model.destroy
   end
 
-  pending "should reload a model" do
+  it "should reload a model" do
     model = BasicModel.new
 
     model.name = "bob"
     model.address = "somewhere"
     model.age = 34
 
-    (model.save).should eq_true
+    model.save.should be_true
     id = model.id
     model.name = nil
-    (model.changed?).should eq_true
+    model.changed?.should be_true
 
     model.reload
-    (model.changed?).should eq_false
-    (model.id).should eq id
+    model.changed?.should be_false
+    model.id.should eq id
 
     model.destroy
-    (model.destroyed?).should eq_true
+    model.destroyed?.should be_true
   end
 
-  pending "should update attributes" do
+  it "should update attributes" do
     model = BasicModel.new
+    model.update(name: "bob", age: 34)
 
-    model.name = "bob"
-    model.age = 34
+    model.new_record?.should be_false
+    model.destroyed?.should be_false
+    model.persisted?.should be_true
 
-    (model.new_record?).should eq_false
-    (model.destroyed?).should eq_false
-    (model.persisted?).should eq_true
-
-    (model.name).should eq "bob"
-    (model.age).should eq 34
-    (model.address).should eq nil
+    model.name.should eq "bob"
+    model.age.should eq 34
+    model.address.should eq nil
 
     model.destroy
-    (model.destroyed?).should eq_true
+    model.destroyed?.should be_true
   end
 end

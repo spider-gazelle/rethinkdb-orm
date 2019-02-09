@@ -42,8 +42,8 @@ end
 class ModelWithValidations < RethinkORM::Base
   attribute name : String
   attribute address : String
-  attribute age : Int32
+  attribute age : Int32 = 10
 
   validates :name, presence: true
-  validates :age, numericality: {only_integer: true}
+  validates :age, numericality: {greater_than: 20}
 end

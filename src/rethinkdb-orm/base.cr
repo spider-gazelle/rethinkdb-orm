@@ -16,9 +16,6 @@ abstract class RethinkORM::Base < ActiveModel::Model
 
   extend Queries
 
-  @__key__ : String | Nil
-  @id : String | Nil
-
   macro inherited
     __process_table__
   end
@@ -28,22 +25,11 @@ abstract class RethinkORM::Base < ActiveModel::Model
     # __process_queries__
   end
 
-  # Retrieve id
-  def id
-    @__key__ || @id
-  end
+  # Default primary key
+  attribute id : String
 
-  # Lazily instantiate db connection
-  def self.db
-    @@db ||= Connection.db
-  end
-
-  # Allow manual override of db connection
-  def self.db=(db : RethinkDB::Connection)
-    @@db = db
-  end
-
-  def self.raw(&block)
-    Connection.raw(&block)
+  # TODO: Is this the best way to do this?
+  def ==(object)
+    object.attributes == attributes && object.id == @id
   end
 end
