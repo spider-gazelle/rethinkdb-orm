@@ -23,20 +23,11 @@ abstract class RethinkORM::Base < ActiveModel::Model
   macro finished
     # __process_persistence__
     # __process_queries__
-    __process_equality__
   end
 
   # Default primary key
   attribute id : String
 
-  macro __process_equality__
-    # TODO: Is this the best way to do this?
-    def ==(object)
-      if object.is_a?({{ @type.id }})
-        object.attributes == attributes && object.id == @id
-      else
-        false
-      end
-    end
-  end
+  # TODO: Is this the best way to do this?
+  def_equals attributes
 end

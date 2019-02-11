@@ -81,23 +81,26 @@ module RethinkORM::Persistence
     self
   end
 
+  # Destroy object, run destroy callbacks and update associations
+  #
   def destroy
     return self if destroyed?
     return self if new_record?
 
     run_destroy_callbacks do
-      table_guard do
-        response = Connection.raw do |q|
-          q.table(@@table_name)
-            .get(@id)
-            .delete
-        end
-        deleted = response["deleted"]?.try(&.as_i?) || 0
-        @destroyed = deleted > 0
-        clear_changes_information if @destroyed
-        self
-      end
+      __delete
+      # Update associations here
     end
+  end
+
+  # Only deletes document from table. No callbacks or updated associations
+  #
+  def delete
+    return self if destroyed?
+    return self if new_record?
+
+    __delete
+    self
   end
 
   # Reloads the record from the database.
@@ -168,6 +171,23 @@ module RethinkORM::Persistence
         inserted = response["inserted"]?.try(&.as_i?) || 0
         inserted > 0
       end
+    end
+  end
+
+  # Delete document in table, update model metadata
+  #
+  protected def __delete
+    table_guard do
+      response = Connection.raw do |q|
+        q.table(@@table_name)
+          .get(@id)
+          .delete
+      end
+
+      deleted = response["deleted"]?.try(&.as_i?) || 0
+      @destroyed = deleted > 0
+      clear_changes_information if @destroyed
+      @destroyed
     end
   end
 

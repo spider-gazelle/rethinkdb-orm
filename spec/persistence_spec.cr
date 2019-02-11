@@ -118,6 +118,30 @@ describe RethinkORM::Persistence do
     model.name.should eq "joe"
   end
 
+  it "should skip destroy callbacks on delete" do
+    model = ModelWithCallbacks.new
+
+    # Test initialize
+    model.name.should eq nil
+    model.age.should eq 10
+    model.address.should eq nil
+
+    model.new_record?.should be_true
+    model.destroyed?.should be_false
+    model.persisted?.should be_false
+
+    # Test create
+    model.save.should be_true
+
+    # Test delete
+    model.delete
+    model.new_record?.should be_false
+    model.destroyed?.should be_true
+    model.persisted?.should be_false
+
+    model.name.should eq "bob"
+  end
+
   pending "should skip callbacks when updating columns" do
     model = ModelWithCallbacks.new
 
