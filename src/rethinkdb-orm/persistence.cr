@@ -7,9 +7,6 @@ module RethinkORM::Persistence
   # Flag to allow lazy querying of table status
   @@table_created = false
 
-  # property id
-  # @id : String | Nil
-
   # Id generated on save or set on load
   def new_record?
     if destroyed?
@@ -106,10 +103,11 @@ module RethinkORM::Persistence
   # Reloads the record from the database.
   #
   # Finds record by its key and modifies the receiver in-place:
+  # Throws Error::DocumentNotFound if document fails to load
   def reload
     raise Error::DocumentNotSaved.new("Cannot reload unpersisted document") unless persisted?
 
-    loaded = {{ @type }}.find(@id)[0]
+    loaded = {{ @type }}.find!(@id)
 
     # TODO: Make this faster by updating active-model to accept generic hashes
     new_attributes = loaded.attributes.reduce({} of String => String) do |attrs, kv|

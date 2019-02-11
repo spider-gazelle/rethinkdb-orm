@@ -18,7 +18,7 @@ describe RethinkORM::Base do
 
     base.should_not eq base1
 
-    same_base = BaseTest.find(base.id)[0]
+    same_base = BaseTest.find(base.id)
     base.should eq same_base
     base.should_not be same_base
     base1.should_not eq same_base
@@ -30,7 +30,7 @@ describe RethinkORM::Base do
   it "should load database responses" do
     base = BaseTest.create(name: "joe")
 
-    base_found = BaseTest.find(base.id)[0]
+    base_found = BaseTest.find!(base.id)
 
     base_found.id.should eq base.id
     base_found.should eq base

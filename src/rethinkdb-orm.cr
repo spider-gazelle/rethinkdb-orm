@@ -1,4 +1,4 @@
-module RethinkOrm
+module RethinkORM
 end
 
 require "./rethinkdb-orm/base"

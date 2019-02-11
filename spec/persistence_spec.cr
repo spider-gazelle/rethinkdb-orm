@@ -22,7 +22,7 @@ describe RethinkORM::Persistence do
     model.new_record?.should be_false
     model.destroyed?.should be_false
 
-    loaded_model = BasicModel.find(model.id)[0]?
+    loaded_model = BasicModel.find(model.id)
     loaded_model.should eq model
 
     model.destroy
@@ -44,7 +44,7 @@ describe RethinkORM::Persistence do
     model.new_record?.should be_false
     model.destroyed?.should be_false
 
-    loaded_model = BasicModel.find(model.id)[0]?
+    loaded_model = BasicModel.find(model.id)
     loaded_model.should eq model
 
     model.destroy
@@ -52,7 +52,7 @@ describe RethinkORM::Persistence do
     model.destroyed?.should be_true
     model.persisted?.should be_false
 
-    BasicModel.find(model.id).empty?.should be_true
+    BasicModel.find(model.id).nil?.should be_true
   end
 
   it "should save a model with defaults" do
@@ -72,7 +72,7 @@ describe RethinkORM::Persistence do
     model.destroyed?.should be_false
     model.persisted?.should be_true
 
-    loaded_model = ModelWithDefaults.find(model.id)[0]
+    loaded_model = ModelWithDefaults.find(model.id)
     loaded_model.should eq model
 
     model.destroy
@@ -142,7 +142,7 @@ describe RethinkORM::Persistence do
     model.update_columns(address: "other")
     model.address.should eq "other"
     loaded = ModelWithCallbacks.find model.id
-    loaded[0].address.should eq "other"
+    loaded.address.should eq "other"
 
     # Test delete skipping callbacks
     model.delete

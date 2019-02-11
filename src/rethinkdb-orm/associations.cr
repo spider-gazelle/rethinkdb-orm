@@ -1,12 +1,11 @@
 module RethinkORM::Associations
-  # define getter and setter for parent relationship
-  macro belongs_to(model_name, class_name = nil)
-    {{ parent_name = class_name ? class_name.id.underscore.gsub(/::/, "_") : model_name.id }}
-    {{ parent_class = class_name ? class_name.id : model_name.id.camelcase }}
+  # Defines getter and setter for parent relationship
+  macro belongs_to(parent_class)
+    {% parent_name = parent_class.id.underscore.gsub(/::/, "_") %}
     attribute {{ parent_name.id }}_id : String
 
-    # retrieve the parent relationship
-    def {{ model_name.id }}
+    # Retrieves the parent relationship
+    def {{ parent_name }}
       if parent = {{ parent_class }}.find {{ parent_name.id }}_id
         parent
       else
@@ -14,17 +13,19 @@ module RethinkORM::Associations
       end
     end
 
-    # set the parent relationship
-    def {{model_name.id}}=(parent)
-      @{{ parent_name.id }}_id = parent._id
+    # Sets the parent relationship
+    def {{ parent_name }}=(parent)
+      @{{ parent_name.id }}_id = parent.id
     end
   end
 
-  macro has_many(children_collection, class_name = nil)
-    def {{children_collection.id}}
-      {% children_class = class_name ? class_name.id : children_collection.id[0...-1].camelcase %}
-      return [] of {{children_class}} unless self._id
-      {{children_class}}.all({"#{self.class.to_s.underscore.gsub(/::/,"_")}_id" => self._id})
+  macro has_many(children_class, plural = nil)
+    {% children_collection = (plural ? plural : children_class + 's').downcase %}
+    {% parent_name = @type.name.gsub(/::/, "_").underscore.id %}
+
+    def {{ children_collection.id }}
+      return [] of {{ children_class }} unless self.id
+      {{ children_class }}.where({"{{ parent_name }}_id" => self.id })
     end
   end
 end

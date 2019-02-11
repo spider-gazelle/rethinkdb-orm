@@ -47,3 +47,13 @@ class ModelWithValidations < RethinkORM::Base
   validates :name, presence: true
   validates :age, numericality: {greater_than: 20}
 end
+
+class Parent < RethinkORM::Base
+  attribute name : String
+  has_many Child, plural: "Children"
+end
+
+class Child < RethinkORM::Base
+  attribute age : Int32
+  belongs_to Parent
+end

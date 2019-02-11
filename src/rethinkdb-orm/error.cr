@@ -8,6 +8,9 @@ class RethinkORM::Error < Exception
   class DocumentExists < Error
   end
 
+  class DocumentNotFound < Error
+  end
+
   class DocumentInvalid < Error
   end
 

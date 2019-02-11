@@ -1,6 +1,8 @@
 require "crystal-rethinkdb"
 require "habitat"
 
+include RethinkDB::Shortcuts
+
 class RethinkORM::Connection
   Habitat.create do
     setting host : String = "localhost"
