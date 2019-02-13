@@ -125,19 +125,40 @@ module RethinkORM::Persistence
     self
   end
 
+  # Removes all records from the table
+  # If :remove_table is set, table is
+
+  def clear(remove_table = false)
+    Connection.raw do |q|
+      q.expr([
+        # Drop table
+        q.table_drop(@@table_name),
+        # Create table to persist table unless specified
+        q.branch(
+          # if
+          remove_table,
+          # then
+          {"tables_dropped": 1},
+          # else
+          q.table_create(@@table_name)),
+      ])
+    end
+  end
+
   protected def __update(**options)
     return false unless valid?
     return true unless changed?
 
     run_update_callbacks do
       run_save_callbacks do
-        response = table_guard do
-          Connection.raw do |q|
-            q.table(@@table_name)
-              .get(@id)
-              .update(self.attributes, **options)
-          end
+        # response = RethinkORM.table_guard(@@table_name) do
+        # Connection.raw do |q|
+        response = Connection.raw do |q|
+          q.table(@@table_name)
+            .get(@id)
+            .update(self.attributes, **options)
         end
+        # end
 
         # TODO: Extend active-model to include previous changes
         # TODO: Update associations
@@ -156,11 +177,13 @@ module RethinkORM::Persistence
         #       Requires either changing default primary key or using secondary index
         @id ||= self.uuid_generator.next(self)
 
-        response = table_guard do
-          Connection.raw do |q|
-            q.table(@@table_name).insert(self.attributes, **options)
-          end
+        # response = RethinkORM.table_guard(@@table_name) do
+        # response = RethinkORM.table_guard(@@table_name) do
+        # Connection.raw do |q|
+        response = Connection.raw do |q|
+          q.table(@@table_name).insert(self.attributes, **options)
         end
+        # end
 
         # Set primary key if receiveing generated_key
         @id ||= response["generated_keys"]?.try(&.[0]?).try(&.to_s)
@@ -177,28 +200,18 @@ module RethinkORM::Persistence
   # Delete document in table, update model metadata
   #
   protected def __delete
-    table_guard do
-      response = Connection.raw do |q|
-        q.table(@@table_name)
-          .get(@id)
-          .delete
-      end
+    # RethinkORM.table_guard(@@table_name) do
 
-      deleted = response["deleted"]?.try(&.as_i?) || 0
-      @destroyed = deleted > 0
-      clear_changes_information if @destroyed
-      @destroyed
+    response = Connection.raw do |q|
+      q.table(@@table_name)
+        .get(@id)
+        .delete
     end
-  end
 
-  # Creates table if not present
-  #
-  # Yields the block
-  protected def table_guard(&block)
-    @@table_created = @@table_created || Connection.raw(&.table_list).as_a.map(&.to_s).includes?(@@table_name)
-    unless @@table_created
-      Connection.raw(&.table_create(@@table_name))
-    end
-    yield
+    deleted = response["deleted"]?.try(&.as_i?) || 0
+    @destroyed = deleted > 0
+    clear_changes_information if @destroyed
+    @destroyed
+    # end
   end
 end

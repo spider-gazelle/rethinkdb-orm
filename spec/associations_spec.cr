@@ -7,7 +7,7 @@ describe RethinkORM::Associations do
     child.persisted?.should be_true
     parent.id.should eq child.parent_id
 
-    child_found = Child.where(parent_id: child.parent_id)[0]?
+    child_found = Child.where(parent_id: child.parent_id).first?
     child_found.should eq child
 
     child.destroy
@@ -24,7 +24,7 @@ describe RethinkORM::Associations do
     child.persisted?.should be_true
     parent.id.should eq child.parent_id
 
-    child_found = Child.where(parent_id: child.parent_id)[0]?
+    child_found = Child.where(parent_id: child.parent_id).first?
     child_found.should eq child
 
     child.destroy
@@ -45,9 +45,8 @@ describe RethinkORM::Associations do
     end
 
     parent.persisted?.should be_true
-    parent.children.sort_by { |c| c.age || 0 }.should eq children
 
-    found_children = Child.where(parent_id: parent.id)
+    found_children = parent.children.to_a
     found_children.sort_by { |c| c.age || 0 }.should eq children
 
     children.each { |c| c.destroy }

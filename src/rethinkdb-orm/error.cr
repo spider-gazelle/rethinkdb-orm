@@ -16,4 +16,7 @@ class RethinkORM::Error < Exception
 
   class DocumentNotSaved < Error
   end
+
+  class DatabaseError < Error
+  end
 end

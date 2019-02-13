@@ -9,6 +9,7 @@ module RethinkORM::Table
   macro __process_table__
     {% class_path = @type.name.gsub(/::/, "_").underscore.id %}
     {% table_name = SETTINGS[:table_name] || class_path %}
+    {% RethinkORM::Base::TABLES << table_name.id.stringify %}
     @@table_name = "{{ table_name }}"
 
     def self.table_name

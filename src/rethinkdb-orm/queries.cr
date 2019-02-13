@@ -2,6 +2,8 @@ require "crystal-rethinkdb"
 
 require "./connection"
 
+# require "./lazy"
+
 module RethinkORM::Queries
   extend self
 
@@ -18,16 +20,17 @@ module RethinkORM::Queries
   #
   def find(id, **options)
     documents = find_all(id, **options)
-    documents[0]?
+    documents.first?
   end
 
   # Look up document by id
   #
   def find_all(*ids, **options)
-    objects = Connection.raw do |q|
-      q.table(@@table_name).get_all(ids.to_a)
+    result = table_query do |q|
+      q.get_all(ids.to_a)
     end
-    objects.to_a.map { |o| load o }
+
+    Collection(self).new(result.each)
   end
 
   # Check for document presence in the table
@@ -47,17 +50,24 @@ module RethinkORM::Queries
   # Returns documents for which predicate block is true
   #
   def where(&predicate : -> Bool)
-    objects = Connection.raw do |q|
-      q.table(@@table_name).filter(&predicate)
+    result = table_query do |q|
+      q.filter(&predicate)
     end
-    objects.to_a.map { |o| load o }
+    Collection(self).new(result.each)
+  end
+
+  def where(**attrs, &predicate : -> Bool)
+    result = table_query do |q|
+      q.filter(attrs).filter(&predicate)
+    end
+    Collection(self).new(result.each)
   end
 
   def where(attrs : Hash)
-    objects = Connection.raw do |q|
-      q.table(@@table_name).filter(attrs)
+    result = table_query do |q|
+      q.filter(attrs)
     end
-    objects.to_a.map { |o| load o }
+    Collection(self).new(result.each)
   end
 
   # Returns documents containing fields that match the attributes
@@ -69,12 +79,12 @@ module RethinkORM::Queries
   # Returns a count of all documents in the table
   #
   def count
-    Connection.raw { |q| q.table(@@table_name).count }
+    table_query { |q| q.count }
   end
 
-  # Unmarshall the object from the DB response object
-  #
-  private def load(object)
-    self.from_trusted_json(object.raw.to_json)
+  private def table_query(&block)
+    Connection.raw do |q|
+      yield q.table(@@table_name)
+    end
   end
 end

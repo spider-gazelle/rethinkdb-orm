@@ -31,7 +31,6 @@ class RethinkORM::IdGenerator
     until number.zero?
       number, digit = number.divmod(base_size)
       converted.push(base[digit])
-      # pp digit, number
     end
 
     converted << base[0] if converted.empty?

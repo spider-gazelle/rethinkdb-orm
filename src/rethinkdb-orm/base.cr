@@ -16,13 +16,10 @@ abstract class RethinkORM::Base < ActiveModel::Model
 
   extend Queries
 
+  TABLES = [] of String
+
   macro inherited
     __process_table__
-  end
-
-  macro finished
-    # __process_persistence__
-    # __process_queries__
   end
 
   # Default primary key

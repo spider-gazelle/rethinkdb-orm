@@ -1,6 +1,5 @@
 require "crystal-rethinkdb"
 require "habitat"
-
 include RethinkDB::Shortcuts
 
 class RethinkORM::Connection
@@ -12,7 +11,7 @@ class RethinkORM::Connection
     setting password : String = ""
   end
 
-  @@db_exists = false
+  @@resource_check = false
 
   def self.db
     opts = {
@@ -22,6 +21,7 @@ class RethinkORM::Connection
       user:     settings.user,
       password: settings.password,
     }
+
     @@db ||= RethinkDB::Connection.new(opts)
   end
 
@@ -30,21 +30,39 @@ class RethinkORM::Connection
   # Auto creates the database if its not already present.
   # The block defined query is run and raw results returned.
   def self.raw(&block : -> RethinkDB::Term)
-    query = yield db_autocreate
+    self.create_resources unless @@resource_check
+
+    query = yield r
     query.run(self.db)
   end
 
-  # Safely provides db query namespace, creating the db if it does not already exist
+  # Lazily check for and create non-existant resources in rethink
   #
-  # Returns the db query namespace
-  protected def self.db_autocreate
-    # Check for presence of db
-    @@db_exists = @@db_exists || r.db_list.run(self.db).to_a.map(&.to_s).includes?(settings.db)
-    unless @@db_exists
-      # Create database
-      dbs_created = r.db_create(settings.db).run(self.db)["config_changes"]["dbs_created"].as_i
-      @@db_exists = dbs_created == 1
+  # TODO: support more configuration for db/table sharding and replication
+  protected def self.create_resources
+    db_check = r.branch(
+      # If db present
+      r.db_list.contains(settings.db),
+      # Then noop
+      {"dbs_created" => 0},
+      # Else create db
+      r.db_create(settings.db),
+    )
+
+    table_queries = RethinkORM::Base::TABLES.map do |table|
+      r.branch(
+        # If table present
+        r.db(settings.db).table_list.contains(table),
+        # Then noop
+        {"tables_created" => 0},
+        # Else create table
+        r.db(settings.db).table_create(table)
+      )
     end
-    r.db(settings.db)
+
+    # Combine into series of sequentially evaluated expressions
+    r.expr([db_check] + table_queries).run(self.db)
+    # TODO: Error check
+    @@resource_check = true
   end
 end
