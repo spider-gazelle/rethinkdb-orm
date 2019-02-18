@@ -1,110 +1,115 @@
+require "./spec_helper"
+
 describe RethinkORM::Associations do
-  it "should create associations" do
-    parent = Parent.create!(name: "joe")
-    child = Child.create!(age: 29, parent_id: parent.id)
+  describe "should create association" do
+    it "#has_one" do
+      dog = Dog.create!(breed: "Dachsund")
+      child = Child.create!(age: 29, dog_id: dog.id)
 
-    parent.persisted?.should be_true
-    child.persisted?.should be_true
-    parent.id.should eq child.parent_id
+      child.persisted?.should be_true
+      dog.persisted?.should be_true
 
-    child_found = Child.where(parent_id: child.parent_id).first?
-    child_found.should eq child
+      child.dog_id.should eq dog.id
 
-    child.destroy
-    parent.destroy
-  end
+      # Looks-ups for association
+      child.dog.should eq dog
 
-  it "should allow setting of parent in belongs_to relationships" do
-    parent = Parent.create!(name: "joe")
-    child = Child.new(age: 29)
-    child.parent = parent
-    child.save
-
-    parent.persisted?.should be_true
-    child.persisted?.should be_true
-    parent.id.should eq child.parent_id
-
-    child_found = Child.where(parent_id: child.parent_id).first?
-    child_found.should eq child
-
-    child.destroy
-    parent.destroy
-  end
-
-  it "should allow querying for dependent children" do
-    parent = Parent.create!(name: "joe")
-    child1 = Child.new(age: 20)
-    child2 = Child.new(age: 21)
-    child3 = Child.new(age: 22)
-    children = [child1, child2, child3]
-
-    children.each do |c|
-      c.parent = parent
-      c.save
-      c.persisted?.should be_true
+      child.destroy
+      dog.destroy
     end
 
-    parent.persisted?.should be_true
+    it "#has_many" do
+      parent = ParentHasMany.create!(name: "Jah Shaka")
 
-    found_children = parent.children.to_a
-    found_children.sort_by { |c| c.age || 0 }.should eq children
+      children = [10, 11, 12].map do |age|
+        child = ChildBelongs.new(age: age)
+        child.parent_has_many = parent
+        child = child.save!
+        child.persisted?.should be_true
+        parent.id.should eq child.parent_has_many_id
+        child
+      end
 
-    children.each { |c| c.destroy }
-    parent.destroy
+      children_found = parent.children.to_a.sort_by { |c| c.age || 0 }
+      children_found.should eq children
+
+      parent.destroy
+      children.try(&.each(&.destroy))
+    end
   end
 
-  pending "should work with dependent associations" do
-    parent = Parent.create!(name: "joe")
-    child = Child.create!(age: 29, parent_id: parent.id)
+  describe "dependent associations" do
+    it "#belongs_to" do
+      child = Child.create!(age: 29)
+      dog = DogDependent.new(breed: "Dachsund")
+      dog.child = child
+      dog.save
 
-    parent.persisted?.should be_true
-    child.persisted?.should be_true
-    id = parent.id
+      child.persisted?.should be_true
+      dog.persisted?.should be_true
 
-    child.destroy
-    child.destroyed?.should be_true
-    parent.destroyed?.should be_false
+      dog.child.try(&.id).should eq child.id
+      dog.destroy
 
-    # Ensure that parent has been destroyed
-    expect_raises RethinkORM::Error::DocumentNotFound{Parent.find!(id)}
-    expect_raises RethinkORM::Error::DocumentNotFound{parent.reload}
+      # Ensure owner association deleted
+      Child.exists?(child.id).should be_false
+    end
 
-    # Save will always return true unless the model is changed (won't touch the database)
-    parent.name = "should fail"
+    it "#has_one" do
+      dog = Dog.create!(breed: "Spitz")
+      child = ChildHasOneDependent.new(age: 29)
+      child.dog = dog
+      child.save
 
-    expect_raises RethinkORM::Error::DocumentNotFound{parent.save}
-    expect_raises RethinkORM::Error::DocumentNotFound{parent.save!}
+      child.persisted?.should be_true
+      dog.persisted?.should be_true
+
+      child.dog.should eq dog
+      child.destroy
+
+      # Ensure both owner and dependent deleted
+      Child.exists?(child.id).should be_false
+      Dog.exists?(dog.id).should be_false
+    end
+
+    it "#has_many" do
+      parent = ParentHasManyDependent.create!(name: "joe")
+      parent.persisted?.should be_true
+
+      children = [10, 11, 12].map do |age|
+        child = ChildBelongsDependent.new(age: age)
+        child.parent_has_many = parent
+        child = child.save!
+        child.persisted?.should be_true
+        parent.id.should eq child.parent_has_many_id
+        child
+      end
+
+      # Check the associations can be retrieved
+      dependent_children = parent.children.to_a.sort_by! { |c| c.age || 0 }
+      dependent_children.should eq children
+
+      parent.destroy
+      # Ensure that parent has been destroyed
+      ParentHasManyDependent.exists?(parent.id).should be_false
+
+      # Ensure no children persist in the db
+      parent.children.to_a.empty?.should be_true
+    end
   end
 
-  pending "should cache associations" do
-    parent = Parent.create!(name: "joe")
-    child = Child.create!(age: 29, parent_id: parent.id)
-
-    id = child.parent.id
-    parent.id.should_not eq child.parent.id
-    parent.should eq child.parent
-    child.parent.id.should eq id
-
-    child.reload
-
-    parent.should eq child.parent
-    child.parent.id.should_not eq id
-
-    child.destroy
-  end
-
-  pending "should ignore associations when delete is used" do
-    parent = Parent.create!(name: "joe")
-    child = Child.create!(age: 29, parent_id: parent.id)
+  it "should ignore associations when delete is used" do
+    parent = ParentHasMany.create!(name: "joe")
+    child = ChildBelongsDependent.create!(age: 29, parent_has_many_id: parent.id)
 
     id = child.id
     child.delete
 
-    Child.exists?(id).should be_false
-    Parent.exists?(parent.id).should be_true
+    ChildBelongsDependent.exists?(id).should be_false
+    ParentHasMany.exists?(parent.id).should be_true
 
     id = parent.id
     parent.delete
-    Parent.exists?(id).should be_false
+    ParentHasMany.exists?(id).should be_false
   end
 end

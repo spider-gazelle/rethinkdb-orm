@@ -11,8 +11,8 @@ abstract class RethinkORM::Base < ActiveModel::Model
   include ActiveModel::Callbacks
 
   include Associations
-  include Persistence
   include Table
+  include Persistence
 
   extend Queries
 

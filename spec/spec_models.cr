@@ -48,12 +48,45 @@ class ModelWithValidations < RethinkORM::Base
   validates :age, numericality: {greater_than: 20}
 end
 
-class Parent < RethinkORM::Base
+# # Association Models
+
+class ParentHasMany < RethinkORM::Base
   attribute name : String
-  has_many Child, plural: "Children"
+  has_many ChildBelongs, plural: "Children"
+end
+
+class ParentHasManyDependent < RethinkORM::Base
+  attribute name : String
+  has_many ChildBelongs, plural: "Children", dependent: RethinkORM::Associations::Destroy
 end
 
 class Child < RethinkORM::Base
   attribute age : Int32
-  belongs_to Parent
+  has_one Dog
+  belongs_to ParentHasMany
+end
+
+class ChildBelongs < RethinkORM::Base
+  attribute age : Int32
+  belongs_to ParentHasMany
+end
+
+class ChildBelongsDependent < RethinkORM::Base
+  attribute age : Int32
+  belongs_to ParentHasMany, dependent: RethinkORM::Associations::Dependency::Destroy
+end
+
+class ChildHasOneDependent < RethinkORM::Base
+  attribute age : Int32
+  has_one Dog, dependent: RethinkORM::Associations::Dependency::Destroy
+end
+
+class Dog < RethinkORM::Base
+  attribute breed : String
+  belongs_to Child
+end
+
+class DogDependent < RethinkORM::Base
+  attribute breed : String
+  belongs_to Child, dependent: RethinkORM::Associations::Dependency::Destroy
 end

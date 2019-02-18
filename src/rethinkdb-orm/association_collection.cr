@@ -1,15 +1,16 @@
 class RethinkORM::AssociationCollection(Owner, Target)
   forward_missing_to all
 
-  def initialize(@owner : Owner, @foreign_key : (Symbol | String), @through : (Symbol | String | Nil) = nil)
+  def initialize(@owner, @through = nil)
+    @foreign_key = Owner.name.underscore.downcase.gsub(/::/, "_") + "_id"
   end
 
   def all
-    Target.where({"#{@foreign_key}_id" => @owner.id})
+    Target.where({"#{foreign_key}" => owner.id})
   end
 
   def where(**attrs)
-    attrs = attrs.merge({"#{@foreign_key}_id" => @owner.id})
+    attrs = attrs.merge({"#{foreign_key}" => owner.id})
     Target.where(**attrs)
   end
 
@@ -21,7 +22,7 @@ class RethinkORM::AssociationCollection(Owner, Target)
     Target.find!(value)
   end
 
-  private getter owner
-  private getter foreign_key
-  private getter through
+  private getter owner : Owner
+  private getter through : String | Nil
+  private getter foreign_key : String
 end

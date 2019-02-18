@@ -89,7 +89,7 @@ module RethinkORM::Persistence
 
     run_destroy_callbacks do
       __delete
-      # Update associations here
+      self
     end
   end
 
@@ -100,7 +100,6 @@ module RethinkORM::Persistence
     return self if new_record?
 
     __delete
-    self
   end
 
   # Reloads the record from the database.
