@@ -1,7 +1,7 @@
 require "./spec_helper"
 
 describe RethinkORM::Associations do
-  describe "should create association" do
+  describe "independent association" do
     it "#has_one" do
       dog = Dog.create!(breed: "Dachsund")
       child = Child.create!(age: 29, dog_id: dog.id)
@@ -19,14 +19,15 @@ describe RethinkORM::Associations do
     end
 
     it "#has_many" do
-      parent = ParentHasMany.create!(name: "Jah Shaka")
+      parent = Parent.create!(name: "Jah Shaka")
 
       children = [10, 11, 12].map do |age|
-        child = ChildBelongs.new(age: age)
-        child.parent_has_many = parent
+        child = Child.new(age: age)
+        child.parent = parent
         child = child.save!
         child.persisted?.should be_true
-        parent.id.should eq child.parent_has_many_id
+        parent.id.should eq child.parent_id
+
         child
       end
 
@@ -40,76 +41,73 @@ describe RethinkORM::Associations do
 
   describe "dependent associations" do
     it "#belongs_to" do
-      child = Child.create!(age: 29)
-      dog = DogDependent.new(breed: "Dachsund")
-      dog.child = child
-      dog.save
+      programmer = Programmer.create!(name: "SPJ")
+      coffee = Coffee.new(temperature: 80)
+      coffee.programmer = programmer
+      coffee.save
 
-      child.persisted?.should be_true
-      dog.persisted?.should be_true
+      coffee.persisted?.should be_true
+      programmer.persisted?.should be_true
 
-      dog.child.try(&.id).should eq child.id
-      dog.destroy
+      coffee.programmer.try(&.id).should eq programmer.id
+      coffee.destroy
 
       # Ensure owner association deleted
-      Child.exists?(child.id).should be_false
+      Programmer.exists?(programmer.id).should be_false
     end
 
     it "#has_one" do
-      dog = Dog.create!(breed: "Spitz")
-      child = ChildHasOneDependent.new(age: 29)
-      child.dog = dog
-      child.save
+      friend = Friend.create(name: "liberty")
+      programmer = Programmer.create!(name: "RMS", friend_id: friend.id)
 
-      child.persisted?.should be_true
-      dog.persisted?.should be_true
+      friend.persisted?.should be_true
+      programmer.persisted?.should be_true
 
-      child.dog.should eq dog
-      child.destroy
+      programmer.friend.should eq friend
+      programmer.destroy
 
       # Ensure both owner and dependent deleted
-      Child.exists?(child.id).should be_false
-      Dog.exists?(dog.id).should be_false
+      Friend.exists?(friend.id).should be_false
+      Programmer.exists?(programmer.id).should be_false
     end
 
     it "#has_many" do
-      parent = ParentHasManyDependent.create!(name: "joe")
-      parent.persisted?.should be_true
+      car = Car.create!(brand: "Toyota")
+      car.persisted?.should be_true
 
-      children = [10, 11, 12].map do |age|
-        child = ChildBelongsDependent.new(age: age)
-        child.parent_has_many = parent
-        child = child.save!
-        child.persisted?.should be_true
-        parent.id.should eq child.parent_has_many_id
-        child
+      wheels = [] of Wheel
+      4.times do |v|
+        wheel = Wheel.new(width: 10 + v)
+        wheel.car = car
+        wheel = wheel.save!
+        wheel.persisted?.should be_true
+        car.id.should eq wheel.car_id
+        wheels << wheel
       end
 
       # Check the associations can be retrieved
-      dependent_children = parent.children.to_a.sort_by! { |c| c.age || 0 }
-      dependent_children.should eq children
+      dependent_wheels = car.wheels.to_a.sort_by! { |w| w.width || 0 }
+      dependent_wheels.should eq wheels
 
-      parent.destroy
+      car.destroy
+
       # Ensure that parent has been destroyed
-      ParentHasManyDependent.exists?(parent.id).should be_false
+      Car.exists?(car.id).should be_false
 
       # Ensure no children persist in the db
-      parent.children.to_a.empty?.should be_true
+      car.wheels.to_a.empty?.should be_true
     end
   end
 
   it "should ignore associations when delete is used" do
-    parent = ParentHasMany.create!(name: "joe")
-    child = ChildBelongsDependent.create!(age: 29, parent_has_many_id: parent.id)
+    parent = Parent.create!(name: "Joe")
+    child = Child.create!(age: 29, parent_id: parent.id)
 
-    id = child.id
     child.delete
+    Child.exists?(child.id).should be_false
+    Parent.exists?(parent.id).should be_true
 
-    ChildBelongsDependent.exists?(id).should be_false
-    ParentHasMany.exists?(parent.id).should be_true
-
-    id = parent.id
     parent.delete
-    ParentHasMany.exists?(id).should be_false
+    Parent.exists?(parent.id).should be_false
   end
 end

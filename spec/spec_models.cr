@@ -48,45 +48,44 @@ class ModelWithValidations < RethinkORM::Base
   validates :age, numericality: {greater_than: 20}
 end
 
-# # Association Models
+# Association Models
 
-class ParentHasMany < RethinkORM::Base
-  attribute name : String
-  has_many ChildBelongs, plural: "Children"
+class Car < RethinkORM::Base
+  attribute brand : String
+  has_many Wheel, plural: "Wheels", dependent: :destroy
 end
 
-class ParentHasManyDependent < RethinkORM::Base
+class Wheel < RethinkORM::Base
+  attribute width : Int32
+  belongs_to Car
+end
+
+class Programmer < RethinkORM::Base
   attribute name : String
-  has_many ChildBelongs, plural: "Children", dependent: RethinkORM::Associations::Destroy
+  has_one Friend, dependent: :destroy
+end
+
+class Friend < RethinkORM::Base
+  attribute name : String
+end
+
+class Coffee < RethinkORM::Base
+  attribute temperature : Int32
+  belongs_to Programmer, dependent: :destroy
+end
+
+class Parent < RethinkORM::Base
+  attribute name : String
+  has_many Child, plural: "Children"
 end
 
 class Child < RethinkORM::Base
   attribute age : Int32
   has_one Dog
-  belongs_to ParentHasMany
-end
-
-class ChildBelongs < RethinkORM::Base
-  attribute age : Int32
-  belongs_to ParentHasMany
-end
-
-class ChildBelongsDependent < RethinkORM::Base
-  attribute age : Int32
-  belongs_to ParentHasMany, dependent: RethinkORM::Associations::Dependency::Destroy
-end
-
-class ChildHasOneDependent < RethinkORM::Base
-  attribute age : Int32
-  has_one Dog, dependent: RethinkORM::Associations::Dependency::Destroy
+  belongs_to Parent
 end
 
 class Dog < RethinkORM::Base
   attribute breed : String
   belongs_to Child
-end
-
-class DogDependent < RethinkORM::Base
-  attribute breed : String
-  belongs_to Child, dependent: RethinkORM::Associations::Dependency::Destroy
 end
