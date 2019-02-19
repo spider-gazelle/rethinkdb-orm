@@ -47,8 +47,8 @@ module RethinkORM::Associations
     end
   end
 
-  macro has_many(child_class, plural = nil, dependent = :none, through = nil)
-    {% child_collection = (plural ? plural : child_class + 's').underscore.downcase %}
+  macro has_many(child_class, collection_name = nil, dependent = :none, through = nil)
+    {% child_collection = (collection_name ? collection_name : child_class + 's').underscore.downcase %}
     {% association_method = child_collection.id.symbolize %}
 
     destroy_callback({{association_method}}, {{ dependent }})

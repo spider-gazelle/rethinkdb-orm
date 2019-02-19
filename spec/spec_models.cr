@@ -52,7 +52,7 @@ end
 
 class Car < RethinkORM::Base
   attribute brand : String
-  has_many Wheel, plural: "Wheels", dependent: :destroy
+  has_many Wheel, collection_name: "wheels", dependent: :destroy
 end
 
 class Wheel < RethinkORM::Base
@@ -76,7 +76,7 @@ end
 
 class Parent < RethinkORM::Base
   attribute name : String
-  has_many Child, plural: "Children"
+  has_many Child, collection_name: "children"
 end
 
 class Child < RethinkORM::Base
