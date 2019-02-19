@@ -2,10 +2,23 @@ require "crystal-rethinkdb"
 
 require "./connection"
 
-# require "./lazy"
-
 module RethinkORM::Queries
   extend self
+
+  # Cursor of each model in the database
+  def all
+    result = Connection.raw do |q|
+      q.table(@@table_name)
+    end
+    Collection(self).new(result.each)
+  end
+
+  # Establishes a changefeed of models in a rethinkdb table
+  # If no id provided, changes for each document in the table will be iterated
+  def changes(id : String? = nil)
+    changes_cursor = id ? table_query { |q| q.get(id).changes } : table_query { |q| q.changes }
+    Collection(self).new(changes_cursor.each)
+  end
 
   # Lookup document by id
   #
@@ -82,7 +95,7 @@ module RethinkORM::Queries
     table_query { |q| q.count }
   end
 
-  private def table_query(&block)
+  private def table_query
     Connection.raw do |q|
       yield q.table(@@table_name)
     end

@@ -29,7 +29,7 @@ class RethinkORM::Connection
   #
   # Auto creates the database if its not already present.
   # The block defined query is run and raw results returned.
-  def self.raw(&block : -> RethinkDB::Term)
+  def self.raw
     self.create_resources unless @@resource_check
 
     query = yield r

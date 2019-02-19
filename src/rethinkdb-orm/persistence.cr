@@ -40,6 +40,27 @@ module RethinkORM::Persistence
       document
     end
 
+    # Removes all records from the table
+    #
+    # :remove_table does not recreate the table
+    def self.clear(remove_table=false)
+      Connection.raw do |q|
+        q.expr([
+          # Drop table
+          q.table_drop(@@table_name),
+          # Create table to persist table unless specified
+          q.branch(
+            # if
+            remove_table,
+            # then
+            {"tables_dropped": 1},
+            # else
+            q.table_create(@@table_name)),
+        ])
+      end
+  end
+
+
     property uuid_generator = IdGenerator
   end
 
@@ -81,6 +102,22 @@ module RethinkORM::Persistence
     self
   end
 
+  def update_fields(**attributes)
+    raise Error::DocumentInvalid.new("Cannot update fields a new document!") if new_record?
+
+    assign_attributes(**attributes)
+    response = Connection.raw do |q|
+      q.table(@@table_name)
+        .get(@id)
+        .update(self.attributes)
+    end
+
+    replaced = response["replaced"]?.try(&.as_i?) || 0
+    updated = response["updated"]?.try(&.as_i?) || 0
+    clear_changes_information if replaced > 0 || updated > 0
+    self
+  end
+
   # Destroy object, run destroy callbacks and update associations
   #
   def destroy
@@ -119,29 +156,9 @@ module RethinkORM::Persistence
     end
     assign_attributes(new_attributes)
 
-    # TODO: reset_associations
+    # TODO: after implementing cache of association, reset_associations here
     clear_changes_information
     self
-  end
-
-  # Removes all records from the table
-  # If :remove_table is set, table is
-
-  def clear(remove_table = false)
-    Connection.raw do |q|
-      q.expr([
-        # Drop table
-        q.table_drop(@@table_name),
-        # Create table to persist table unless specified
-        q.branch(
-          # if
-          remove_table,
-          # then
-          {"tables_dropped": 1},
-          # else
-          q.table_create(@@table_name)),
-      ])
-    end
   end
 
   protected def __update(**options)
@@ -150,14 +167,11 @@ module RethinkORM::Persistence
 
     run_update_callbacks do
       run_save_callbacks do
-        # response = RethinkORM.table_guard(@@table_name) do
-        # Connection.raw do |q|
         response = Connection.raw do |q|
           q.table(@@table_name)
             .get(@id)
             .update(self.attributes, **options)
         end
-        # end
 
         # TODO: Extend active-model to include previous changes
         # TODO: Update associations
@@ -199,8 +213,6 @@ module RethinkORM::Persistence
   # Delete document in table, update model metadata
   #
   protected def __delete
-    # RethinkORM.table_guard(@@table_name) do
-
     response = Connection.raw do |q|
       q.table(@@table_name)
         .get(@id)
@@ -211,6 +223,5 @@ module RethinkORM::Persistence
     @destroyed = deleted > 0
     clear_changes_information if @destroyed
     @destroyed
-    # end
   end
 end

@@ -31,6 +31,22 @@ describe RethinkORM::Persistence do
     model.persisted?.should be_false
   end
 
+  it "should update attributes" do
+    model = BasicModel.new
+    model.update(name: "bob", age: 34)
+
+    model.new_record?.should be_false
+    model.destroyed?.should be_false
+    model.persisted?.should be_true
+
+    model.name.should eq "bob"
+    model.age.should eq 34
+    model.address.should eq nil
+
+    model.destroy
+    model.destroyed?.should be_true
+  end
+
   it "should destroy a model" do
     model = BasicModel.new(age: 34, name: "bob", address: "somewhere")
 
@@ -81,100 +97,122 @@ describe RethinkORM::Persistence do
     model.persisted?.should be_false
   end
 
-  it "should execute callbacks" do
-    model = ModelWithCallbacks.new
+  describe "callbacks" do
+    it "should execute callbacks" do
+      model = ModelWithCallbacks.new
 
-    # Test initialize
-    model.name.should eq nil
-    model.age.should eq 10
-    model.address.should eq nil
+      # Test initialize
+      model.name.should eq nil
+      model.age.should eq 10
+      model.address.should eq nil
 
-    model.new_record?.should be_true
-    model.destroyed?.should be_false
-    model.persisted?.should be_false
+      model.new_record?.should be_true
+      model.destroyed?.should be_false
+      model.persisted?.should be_false
 
-    # Test create
+      # Test create
+      model.save.should be_true
+
+      model.name.should eq "bob"
+      model.age.should eq 10
+      model.address.should eq "23"
+
+      # Test Update
+      model.address = "other"
+      model.address.should eq "other"
+      model.save.should be_true
+
+      model.name.should eq "bob"
+      model.age.should eq 30
+      model.address.should eq "23"
+
+      # Test destroy
+      model.destroy
+      model.new_record?.should be_false
+      model.destroyed?.should be_true
+      model.persisted?.should be_false
+
+      model.name.should eq "joe"
+    end
+
+    it "should skip destroy callbacks on delete" do
+      model = ModelWithCallbacks.new
+
+      # Test initialize
+      model.name.should eq nil
+      model.age.should eq 10
+      model.address.should eq nil
+
+      model.new_record?.should be_true
+      model.destroyed?.should be_false
+      model.persisted?.should be_false
+
+      # Test create
+      model.save.should be_true
+
+      # Test delete
+      model.delete
+      model.new_record?.should be_false
+      model.destroyed?.should be_true
+      model.persisted?.should be_false
+
+      model.name.should eq "bob"
+    end
+
+    it "should skip callbacks when updating fields" do
+      model = ModelWithCallbacks.new
+
+      # Test initialize
+      model.name.should eq nil
+      model.age.should eq 10
+      model.address.should eq nil
+
+      model.new_record?.should be_true
+      model.destroyed?.should be_false
+      model.persisted?.should be_false
+
+      # Test create
+      result = model.save
+      result.should be_true
+
+      model.name.should eq "bob"
+      model.age.should eq 10
+      model.address.should eq "23"
+
+      # Test Update
+      model.update_fields(address: "other")
+      model.address.should eq "other"
+      loaded = ModelWithCallbacks.find model.id
+      loaded.try(&.address).should eq "other"
+
+      # Test delete skipping callbacks
+      model.delete
+      model.new_record?.should be_false
+      model.destroyed?.should be_true
+      model.persisted?.should be_false
+
+      model.name.should eq "bob"
+    end
+  end
+
+  it "should reload a model" do
+    model = BasicModel.new
+
+    model.name = "bob"
+    model.address = "somewhere"
+    model.age = 34
+
     model.save.should be_true
+    id = model.id
+    model.name = nil
+    model.changed?.should be_true
 
-    model.name.should eq "bob"
-    model.age.should eq 10
-    model.address.should eq "23"
+    model.reload
+    model.changed?.should be_false
+    model.id.should eq id
 
-    # Test Update
-    model.address = "other"
-    model.address.should eq "other"
-    model.save.should be_true
-
-    model.name.should eq "bob"
-    model.age.should eq 30
-    model.address.should eq "23"
-
-    # Test destroy
     model.destroy
-    model.new_record?.should be_false
     model.destroyed?.should be_true
-    model.persisted?.should be_false
-
-    model.name.should eq "joe"
-  end
-
-  it "should skip destroy callbacks on delete" do
-    model = ModelWithCallbacks.new
-
-    # Test initialize
-    model.name.should eq nil
-    model.age.should eq 10
-    model.address.should eq nil
-
-    model.new_record?.should be_true
-    model.destroyed?.should be_false
-    model.persisted?.should be_false
-
-    # Test create
-    model.save.should be_true
-
-    # Test delete
-    model.delete
-    model.new_record?.should be_false
-    model.destroyed?.should be_true
-    model.persisted?.should be_false
-
-    model.name.should eq "bob"
-  end
-
-  pending "should skip callbacks when updating columns" do
-    model = ModelWithCallbacks.new
-
-    # Test initialize
-    model.name.should eq nil
-    model.age.should eq 10
-    model.address.should eq nil
-
-    model.new_record?.should be_true
-    model.destroyed?.should be_false
-    model.persisted?.should be_false
-
-    # Test create
-    result = model.save
-    result.should be_true
-
-    model.name.should eq "bob"
-    model.age.should eq 10
-    model.address.should eq "23"
-
-    # Test Update
-    model.update_columns(address: "other")
-    model.address.should eq "other"
-    loaded = ModelWithCallbacks.find model.id
-    loaded.address.should eq "other"
-
-    # Test delete skipping callbacks
-    model.delete
-    model.new_record?.should be_false
-    model.destroyed?.should be_true
-    model.persisted?.should be_false
-
-    model.name.should eq "bob"
   end
 
   it "should perform validations" do
@@ -212,39 +250,19 @@ describe RethinkORM::Persistence do
     model.destroy
   end
 
-  it "should reload a model" do
-    model = BasicModel.new
+  it "should clear a table of documents" do
+    BasicModel.clear
 
-    model.name = "bob"
-    model.address = "somewhere"
-    model.age = 34
+    name = "Wobbuffet"
+    5.times do
+      BasicModel.create(name: name)
+    end
 
-    model.save.should be_true
-    id = model.id
-    model.name = nil
-    model.changed?.should be_true
+    models = BasicModel.all.to_a
+    models.size.should eq 5
+    models.all? { |m| m.name == name }.should be_true
 
-    model.reload
-    model.changed?.should be_false
-    model.id.should eq id
-
-    model.destroy
-    model.destroyed?.should be_true
-  end
-
-  it "should update attributes" do
-    model = BasicModel.new
-    model.update(name: "bob", age: 34)
-
-    model.new_record?.should be_false
-    model.destroyed?.should be_false
-    model.persisted?.should be_true
-
-    model.name.should eq "bob"
-    model.age.should eq 34
-    model.address.should eq nil
-
-    model.destroy
-    model.destroyed?.should be_true
+    BasicModel.clear
+    BasicModel.all.to_a.empty?.should be_true
   end
 end
