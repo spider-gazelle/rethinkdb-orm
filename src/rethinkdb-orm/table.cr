@@ -1,14 +1,14 @@
 module RethinkORM::Table
-  SETTINGS = {} of Nil => Nil
+  TABLE_NAME = nil
 
   # Macro to manually set the table name of the model
   macro table_name(name)
-    {% SETTINGS[:table_name] = name.id %}
+    {% TABLE_NAME = name.id %}
   end
 
   macro __process_table__
     {% class_path = @type.name.gsub(/::/, "_").underscore.id %}
-    {% table_name = SETTINGS[:table_name] || class_path %}
+    {% table_name = TABLE_NAME || class_path %}
     {% RethinkORM::Base::TABLES << table_name.id.stringify %}
     @@table_name = "{{ table_name }}"
 

@@ -1,14 +1,18 @@
-require "./association_collection"
+require "./utils/association_collection"
 
 module RethinkORM::Associations
   # Defines getter and setter for parent relationship
-  macro belongs_to(parent_class, dependent = :none)
+  macro belongs_to(parent_class, dependent = :none, create_index = true)
     {% parent_name = parent_class.id.underscore.downcase.gsub(/::/, "_") %}
     {% foreign_key = parent_name + "_id" %}
     {% association_method = parent_name.id.symbolize %}
 
     attribute {{ foreign_key.id }} : String
     destroy_callback({{association_method}}, {{dependent}})
+
+    {% if create_index %}
+      secondary_index({{ foreign_key.symbolize }})
+    {% end %}
 
     # Retrieves the parent relationship
     def {{ parent_name }}
@@ -25,7 +29,7 @@ module RethinkORM::Associations
     end
   end
 
-  macro has_one(child_class, dependent = :none, through = nil)
+  macro has_one(child_class, dependent = :none, through = nil, create_index = false)
     {% child = child_class.id.underscore.downcase.gsub(/::/, "_") %}
     {% foreign_key = child + "_id" %}
     {% association_method = child.id.symbolize %}
@@ -33,9 +37,13 @@ module RethinkORM::Associations
     attribute {{ foreign_key.id }} : String
     destroy_callback({{ association_method }}, {{dependent}})
 
+    {% if create_index %}
+      secondary_index({{ foreign_key.id }}, @@table_name)
+    {% end %}
+
     def {{ child.id }} : {{ child_class }}?
       self.{{ foreign_key.id }} ? {{ child_class }}.find(self.{{ foreign_key.id }} )
-                          : {{ child_class }}.new
+                                : {{ child_class }}.new
     end
 
     def {{ child.id }}! : {{ child_class }}
@@ -47,6 +55,7 @@ module RethinkORM::Associations
     end
   end
 
+  # Must be used in conjunction with the belongs_to macro
   macro has_many(child_class, collection_name = nil, dependent = :none, through = nil)
     {% child_collection = (collection_name ? collection_name : child_class + 's').underscore.downcase %}
     {% association_method = child_collection.id.symbolize %}

@@ -2,6 +2,7 @@ require "active-model"
 
 require "./associations"
 require "./connection"
+require "./index"
 require "./persistence"
 require "./queries"
 require "./table"
@@ -11,12 +12,14 @@ abstract class RethinkORM::Base < ActiveModel::Model
   include ActiveModel::Callbacks
 
   include Associations
-  include Table
+  include Index
   include Persistence
+  include Table
 
   extend Queries
 
-  TABLES = [] of String
+  TABLES  = [] of String
+  INDICES = [] of NamedTuple(field: String, table: String)
 
   macro inherited
     __process_table__
@@ -26,5 +29,5 @@ abstract class RethinkORM::Base < ActiveModel::Model
   attribute id : String
 
   # TODO: Is this the best way to do this?
-  def_equals attributes
+  def_equals attributes, changed_attributes
 end

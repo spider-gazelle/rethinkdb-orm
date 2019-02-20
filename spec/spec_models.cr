@@ -52,6 +52,9 @@ end
 
 class Car < RethinkORM::Base
   attribute brand : String
+  attribute vin : String
+
+  secondary_index :vin
   has_many Wheel, collection_name: "wheels", dependent: :destroy
 end
 

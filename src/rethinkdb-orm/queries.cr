@@ -1,6 +1,5 @@
-require "crystal-rethinkdb"
-
 require "./connection"
+require "./utils/collection"
 
 module RethinkORM::Queries
   extend self

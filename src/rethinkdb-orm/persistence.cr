@@ -1,7 +1,7 @@
 require "crystal-rethinkdb"
 
-require "./id_generator"
 require "./connection"
+require "./utils/id_generator"
 
 module RethinkORM::Persistence
   # Flag to allow lazy querying of table status

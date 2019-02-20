@@ -60,8 +60,28 @@ class RethinkORM::Connection
       )
     end
 
+    index_creation = RethinkORM::Base::INDICES.map do |index|
+      table = index[:table]
+      field = index[:field]
+
+      r.branch(
+        # If index present
+        r.db(settings.db).table(table).index_list.contains(field),
+        # Then noop
+        {"created" => 0},
+        # Else create index
+        r.db(settings.db).table(table).index_create(field)
+      )
+    end
+
+    # Block until the table has been created
+    index_existence = RethinkORM::Base::INDICES.map do |index|
+      r.db(settings.db).table(index[:table]).index_wait(index[:field])
+    end
+
     # Combine into series of sequentially evaluated expressions
-    r.expr([db_check] + table_queries).run(self.db)
+    r.expr([db_check] + table_queries + index_creation + index_existence).run(self.db)
+
     # TODO: Error check
     @@resource_check = true
   end
