@@ -5,16 +5,16 @@ describe RethinkORM::IdGenerator do
     id_channel = Channel(Array(String)).new
     model = BasicModel.new
 
-    5.times do
+    10.times do
       spawn do
         ids = [] of String
-        500.times { ids << RethinkORM::IdGenerator.next(model) }
+        1000.times { ids << RethinkORM::IdGenerator.next(model) }
         id_channel.send ids
       end
     end
 
     combined_ids = [] of String
-    5.times do
+    10.times do
       combined_ids += id_channel.receive
     end
 
