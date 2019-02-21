@@ -7,6 +7,8 @@ require "./persistence"
 require "./queries"
 require "./table"
 
+require "./validators/*"
+
 abstract class RethinkORM::Base < ActiveModel::Model
   include ActiveModel::Validation
   include ActiveModel::Callbacks
@@ -15,6 +17,7 @@ abstract class RethinkORM::Base < ActiveModel::Model
   include Index
   include Persistence
   include Table
+  include Validators
 
   extend Queries
 

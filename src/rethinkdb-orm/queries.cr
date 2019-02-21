@@ -41,7 +41,7 @@ module RethinkORM::Queries
     get_all(*ids, **options)
   end
 
-  # Query by ids, optionally set a secondary index 
+  # Query by ids, optionally set a secondary index
   #
   def get_all(*ids, **options)
     result = table_query do |q|

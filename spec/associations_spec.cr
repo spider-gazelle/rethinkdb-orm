@@ -100,16 +100,16 @@ describe RethinkORM::Associations do
   end
 
   it "should find association by secondary index" do
-      programmer = Programmer.create!(name: "BWK")
-      coffee = Coffee.new(temperature: 10)
-      coffee.programmer = programmer
-      coffee.save
+    programmer = Programmer.create!(name: "BWK")
+    coffee = Coffee.new(temperature: 10)
+    coffee.programmer = programmer
+    coffee.save
 
-      found_coffee = Coffee.by_programmer_id(programmer.id).to_a.first?
-      found_coffee.should eq coffee
+    found_coffee = Coffee.by_programmer_id(programmer.id).to_a.first?
+    found_coffee.should eq coffee
 
-      coffee.destroy
-      programmer.destroy
+    coffee.destroy
+    programmer.destroy
   end
 
   it "should ignore associations when delete is used" do

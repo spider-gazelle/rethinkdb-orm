@@ -1,5 +1,4 @@
 module RethinkORM::Table
-
   macro included
     macro inherited
       TABLE_NAME = {} of Symbol => String
