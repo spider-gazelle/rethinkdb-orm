@@ -92,3 +92,8 @@ class Dog < RethinkORM::Base
   attribute breed : String
   belongs_to Child
 end
+
+class UnneccesarilyLongNameThatWillProduceAStupidTableName < RethinkORM::Base
+  table :mod
+  attribute why : String
+end

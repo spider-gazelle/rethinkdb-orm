@@ -22,7 +22,9 @@ abstract class RethinkORM::Base < ActiveModel::Model
   INDICES = [] of NamedTuple(field: String, table: String)
 
   macro inherited
-    __process_table__
+    macro finished
+      __process_table__
+    end
   end
 
   # Default primary key
