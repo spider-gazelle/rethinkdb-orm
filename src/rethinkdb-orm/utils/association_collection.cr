@@ -1,3 +1,5 @@
+require "../index"
+
 class RethinkORM::AssociationCollection(Owner, Target)
   forward_missing_to all
 
@@ -6,7 +8,11 @@ class RethinkORM::AssociationCollection(Owner, Target)
   end
 
   def all
-    Target.where({"#{foreign_key}" => owner.id})
+    if Target.has_index(@foreign_key)
+      Target.get_all(owner.id, index: @foreign_key)
+    else
+      Target.where({"#{foreign_key}" => owner.id})
+    end
   end
 
   def where(**attrs)

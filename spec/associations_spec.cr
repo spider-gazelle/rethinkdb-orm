@@ -99,6 +99,19 @@ describe RethinkORM::Associations do
     end
   end
 
+  it "should find association by secondary index" do
+      programmer = Programmer.create!(name: "BWK")
+      coffee = Coffee.new(temperature: 10)
+      coffee.programmer = programmer
+      coffee.save
+
+      found_coffee = Coffee.by_programmer_id(programmer.id).to_a.first?
+      found_coffee.should eq coffee
+
+      coffee.destroy
+      programmer.destroy
+  end
+
   it "should ignore associations when delete is used" do
     parent = Parent.create!(name: "Joe")
     child = Child.create!(age: 29, parent_id: parent.id)

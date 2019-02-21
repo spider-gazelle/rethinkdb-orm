@@ -38,8 +38,14 @@ module RethinkORM::Queries
   # Look up document by id
   #
   def find_all(*ids, **options)
+    get_all(*ids, **options)
+  end
+
+  # Query by ids, optionally set a secondary index 
+  #
+  def get_all(*ids, **options)
     result = table_query do |q|
-      q.get_all(ids.to_a)
+      q.get_all(ids.to_a, **options)
     end
 
     Collection(self).new(result.each)
