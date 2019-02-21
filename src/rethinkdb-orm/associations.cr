@@ -27,6 +27,11 @@ module RethinkORM::Associations
     def {{ parent_name }}=(parent)
       @{{ foreign_key }} = parent.id
     end
+
+    # Look up instances of this model dependent on the foreign key
+    def self.by_{{ foreign_key }}(id)
+      self.find({{ foreign_key }}: id)
+    end
   end
 
   macro has_one(child_class, dependent = :none, through = nil, create_index = false)
