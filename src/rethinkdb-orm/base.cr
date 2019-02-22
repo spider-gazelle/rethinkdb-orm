@@ -16,10 +16,9 @@ abstract class RethinkORM::Base < ActiveModel::Model
   include Associations
   include Index
   include Persistence
+  include Queries
   include Table
   include Validators
-
-  extend Queries
 
   TABLES  = [] of String
   INDICES = [] of NamedTuple(field: String, table: String)

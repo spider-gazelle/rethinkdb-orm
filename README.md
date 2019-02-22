@@ -8,7 +8,7 @@ Extending [ActiveModel](https://github.com/spider-gazelle/active-model) for attr
 
 Register callbacks for `save`, `update`, `create` and `destroy` by setting the corresponding before/after callback handler.
 
-```ruby
+```crystal
 class ModelWithCallbacks < RethinkORM::Base
   attribute address : String
   attribute age : Int32 = 10
@@ -37,7 +37,7 @@ Access children in parent by accessing the method correpsonding to the pluralise
 
 The `has_many` association requires the `belongs_to` association on the child. By default, `belongs_to` creates a secondary index on the foreign key.
 
-```ruby
+```crystal
 class Parent < RethinkORM::Base
   attribute name : String
   has_many Child, collection_name: "children"
@@ -107,9 +107,24 @@ Parameter   |                                               |
 
 ## Changefeeds
 
-In progress..
+Access the changefeed of a document or table through the `changes` query.<br>
+Defaults to watch for events on a table if no id provided.
 
-```ruby
+Parameter |                                     | Default
+--------- | ----------------------------------- | -------
+`id`      | id of document to watch for changes | nil
+
+Returns an iterator that emits `NamedTuple(value: T | Nil, event: Event)`
+
+```crystal
+enum Event
+  Created
+  Updated
+  Deleted
+end
+```
+
+```crystal
 class Game < RethinkORM::Base
   attribute type : String
   attribute score : Int32, default: 0
@@ -119,15 +134,18 @@ ballgame = Game.create!(type: "footy")
 
 # Observe changes on a single document
 spawn do
-  Game.changes(ballgame.id).each do |game|
-    puts "looks like the score is #{game.score}"
+  Game.changes(ballgame.id).each do |change|
+    game = change[:value]
+    puts "looks like the score is #{game.score}" unless game.nil?
   end
 end
 
 # Observe changes on a table
 spawn do 
-  Game.changes.each do |game|
-    puts "#{game.type}: #{game.score}"
+  Game.changes.each do |change|
+    game = change[:value]
+    puts "#{game.type}: #{game.score}" unless game.nil?
+    puts "game event: #{change[:event]}"
   end
 end
 ```

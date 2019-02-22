@@ -151,7 +151,9 @@ module RethinkORM::Persistence
     # TODO: Make this faster by updating active-model to accept generic hashes
     new_attributes = loaded.attributes.reduce({} of String => String) do |attrs, kv|
       key, value = kv
-      attrs[key.to_s] = value.to_s
+      unless value.nil?
+        attrs[key.to_s] = value.to_s
+      end
       attrs
     end
     assign_attributes(new_attributes)
