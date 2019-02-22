@@ -1,5 +1,8 @@
 name: rethinkdb-orm
-version: 0.3.0
+version: 0.4.0
+
+authors:
+  - Caspian Baska <caspianbaska@gmail.com>
 
 dependencies:
   active-model:
