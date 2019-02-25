@@ -97,3 +97,11 @@ class UnneccesarilyLongNameThatWillProduceAStupidTableName < RethinkORM::Base
   table :mod
   attribute why : String
 end
+
+# Validation models
+
+class Snowflake < RethinkORM::Base
+  attribute shape : String
+  attribute meltiness : Int32
+  ensure_unique :shape
+end

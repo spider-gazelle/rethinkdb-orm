@@ -40,6 +40,9 @@ class RethinkORM::Connection
   #
   # TODO: support more configuration for db/table sharding and replication
   protected def self.create_resources
+    tables = RethinkORM::Base::TABLES.uniq
+    indices = RethinkORM::Base::INDICES.uniq
+
     db_check = r.branch(
       # If db present
       r.db_list.contains(settings.db),
@@ -49,7 +52,7 @@ class RethinkORM::Connection
       r.db_create(settings.db),
     )
 
-    table_queries = RethinkORM::Base::TABLES.map do |table|
+    table_queries = tables.map do |table|
       r.branch(
         # If table present
         r.db(settings.db).table_list.contains(table),
@@ -60,7 +63,7 @@ class RethinkORM::Connection
       )
     end
 
-    index_creation = RethinkORM::Base::INDICES.map do |index|
+    index_creation = indices.map do |index|
       table = index[:table]
       field = index[:field]
 
@@ -75,7 +78,7 @@ class RethinkORM::Connection
     end
 
     # Block until the table has been created
-    index_existence = RethinkORM::Base::INDICES.map do |index|
+    index_existence = indices.map do |index|
       r.db(settings.db).table(index[:table]).index_wait(index[:field])
     end
 

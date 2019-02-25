@@ -11,7 +11,7 @@ module RethinkORM::Associations
     destroy_callback({{association_method}}, {{dependent}})
 
     {% if create_index %}
-      secondary_index({{ foreign_key.symbolize }})
+      secondary_index({{ foreign_key.id }})
     {% end %}
 
     # Retrieves the parent relationship
@@ -47,7 +47,7 @@ module RethinkORM::Associations
     destroy_callback({{ association_method }}, {{dependent}})
 
     {% if create_index %}
-      secondary_index({{ foreign_key.id }}, @@table_name)
+      secondary_index({{ foreign_key.id }})
     {% end %}
 
     def {{ child.id }} : {{ child_class }}?
