@@ -103,5 +103,15 @@ end
 class Snowflake < RethinkORM::Base
   attribute shape : String
   attribute meltiness : Int32
-  ensure_unique :shape
+  attribute personality : String
+
+  ensure_unique :meltiness
+  ensure_unique :shape, callback: :id
+  ensure_unique :personality do |personality|
+    personality.downcase
+  end
+
+  def id(value : T) forall T
+    value
+  end
 end

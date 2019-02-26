@@ -141,7 +141,7 @@ spawn do
 end
 
 # Observe changes on a table
-spawn do 
+spawn do
   Game.changes.each do |change|
     game = change[:value]
     puts "#{game.type}: #{game.score}" unless game.nil?
@@ -149,3 +149,18 @@ spawn do
   end
 end
 ```
+
+## Validations
+
+Builds on [active-model's validation](https://github.com/spider-gazelle/active-model#validations)
+
+### `ensure_unique`
+
+Fails to validate if field with duplicate value present in db
+
+Parameter               |                                                         | Default
+----------------------- | ------------------------------------------------------- | -------
+`field`                 | Model attribute on which to guarantee uniqueness
+`create_index`          | Whether or not to generate a secondary index            | true
+`callback : T -> T`     | Optional function to transform field value              | nil
+`block : T -> T`        | Optional block to transform field value before querying | nil

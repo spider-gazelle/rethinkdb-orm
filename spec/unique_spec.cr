@@ -1,11 +1,5 @@
 require "./spec_helper"
 
-class Snowflake < RethinkORM::Base
-  attribute shape : String
-  attribute meltiness : Int32
-  ensure_unique :shape
-end
-
 describe RethinkORM::Validators do
   context "Unique" do
     it "invalidates models with non-unique fields" do
@@ -28,6 +22,17 @@ describe RethinkORM::Validators do
         same_flake.valid?.should be_true
       end
 
+      special_snowflake.valid?.should be_true
+    end
+
+    it "accepts a transform block for the field" do
+      special_snowflake = Snowflake.create!(personality: "gentle")
+      louder_snowflake = Snowflake.new(personality: "GENTLE")
+
+      special_snowflake.valid?.should be_true
+      louder_snowflake.valid?.should be_false
+
+      louder_snowflake.errors[0].to_s.should eq "Snowflake personality should be unique"
       special_snowflake.valid?.should be_true
     end
   end
