@@ -31,6 +31,5 @@ abstract class RethinkORM::Base < ActiveModel::Model
   # Default primary key
   attribute id : String
 
-  # TODO: Is this the best way to do this?
   def_equals attributes, changed_attributes
 end

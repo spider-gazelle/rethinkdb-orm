@@ -48,6 +48,11 @@ class ModelWithValidations < RethinkORM::Base
   validates :age, numericality: {greater_than: 20}
 end
 
+class LittleBitPersistent < RethinkORM::Base
+  attribute name : String
+  attribute age : Int32, persistence: false
+end
+
 # Association Models
 
 class Car < RethinkORM::Base

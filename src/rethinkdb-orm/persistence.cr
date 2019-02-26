@@ -58,8 +58,7 @@ module RethinkORM::Persistence
             q.table_create(@@table_name)),
         ])
       end
-  end
-
+    end
 
     property uuid_generator = IdGenerator
   end
@@ -109,7 +108,7 @@ module RethinkORM::Persistence
     response = Connection.raw do |q|
       q.table(@@table_name)
         .get(@id)
-        .update(self.attributes)
+        .update(self.persistent_attributes)
     end
 
     replaced = response["replaced"]?.try(&.as_i?) || 0
@@ -172,7 +171,7 @@ module RethinkORM::Persistence
         response = Connection.raw do |q|
           q.table(@@table_name)
             .get(@id)
-            .update(self.attributes, **options)
+            .update(self.persistent_attributes, **options)
         end
 
         # TODO: Extend active-model to include previous changes
@@ -196,7 +195,7 @@ module RethinkORM::Persistence
         # response = RethinkORM.table_guard(@@table_name) do
         # Connection.raw do |q|
         response = Connection.raw do |q|
-          q.table(@@table_name).insert(self.attributes, **options)
+          q.table(@@table_name).insert(self.persistent_attributes, **options)
         end
         # end
 
