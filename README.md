@@ -68,7 +68,6 @@ Parameter      |                                                               |
 `parent_class` | The parent class who this class is dependent on               |
 `dependent`    | Sets destroy behaviour. One of `:none`, `:destroy`, `:delete` | `:none`
 `create_index` | Create a secondary index on the foreign key                   | `true`
-`through`      | Sets a through relationship                                   | `nil`
 
 ### `has_many`
 
@@ -77,7 +76,6 @@ Parameter         |                                                             
 `child_class`     | The parent class who this class is dependent on                               |
 `dependent`       | Sets destroy behaviour. One of `:none`, `:destroy`, `:delete`                 | `:none`
 `collection_name` | Define collection name, otherwise collection named through dumb pluralisation | `nil`
-`through`         | Sets a through relationship                                                   | `nil`
 
 ### `has_one`
 
@@ -86,7 +84,6 @@ Parameter         |                                                             
 `child_class`     | The parent class who this class is dependent on                               |
 `dependent`       | Sets destroy behaviour. One of `:none`, `:destroy`, `:delete`                 | `:none`
 `collection_name` | Define collection name, otherwise collection named through dumb pluralisation | `nil`
-`through`         | Sets a through relationship                                                   | `nil`
 
 ### Dependency
 

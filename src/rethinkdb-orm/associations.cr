@@ -5,9 +5,11 @@ module RethinkORM::Associations
   macro belongs_to(parent_class, dependent = :none, create_index = true)
     {% parent_name = parent_class.id.underscore.downcase.gsub(/::/, "_") %}
     {% foreign_key = parent_name + "_id" %}
+    {% assoc_var = ("__" + parent_name.id.stringify).id %}
     {% association_method = parent_name.id.symbolize %}
 
     attribute {{ foreign_key.id }} : String
+    property {{ assoc_var }} : {{ parent_class }}?
     destroy_callback({{association_method}}, {{dependent}})
 
     {% if create_index %}
@@ -15,17 +17,30 @@ module RethinkORM::Associations
     {% end %}
 
     # Retrieves the parent relationship
-    def {{ parent_name }}
-      if @{{ foreign_key }} && (parent = {{ parent_class }}.find @{{ foreign_key }})
-        parent
-      else
-        {{ parent_class }}.new
-      end
+    def {{ parent_name }} : {{ parent_class }}?
+      parent = self.{{ assoc_var.id }}
+      return parent unless parent.nil?
+
+      self.{{ assoc_var.id }} = self.{{ foreign_key.id }} ? {{ parent_class }}.find(self.{{ foreign_key.id }})
+                                                          : {{ parent_class }}.new
+    end
+
+    def {{ parent_name }}! : {{ parent_class }}
+      parent = self.{{ assoc_var.id }}
+      return parent unless parent.nil?
+      return {{ parent_class }}.new if self.{{ foreign_key.id }}.nil?
+
+      self.{{ assoc_var.id }} = {{ parent_class }}.find!(self.{{ foreign_key.id }})
     end
 
     # Sets the parent relationship
     def {{ parent_name }}=(parent)
-      @{{ foreign_key }} = parent.id
+      self.{{ assoc_var }} = parent
+      self.{{ foreign_key }} = parent.id
+    end
+
+    def reset_associations
+      self.{{ assoc_var }} = nil
     end
 
     # Look up instances of this model dependent on the foreign key
@@ -38,34 +53,49 @@ module RethinkORM::Associations
     end
   end
 
-  macro has_one(child_class, dependent = :none, through = nil, create_index = false)
+  macro has_one(child_class, dependent = :none, create_index = false)
     {% child = child_class.id.underscore.downcase.gsub(/::/, "_") %}
+    {% assoc_var = ("__" + child.id.stringify).id %}
     {% foreign_key = child + "_id" %}
     {% association_method = child.id.symbolize %}
 
     attribute {{ foreign_key.id }} : String
+    property {{ assoc_var }} : {{ child_class }}?
     destroy_callback({{ association_method }}, {{dependent}})
 
     {% if create_index %}
       secondary_index({{ foreign_key.id }})
     {% end %}
 
+    # Get cached child, load or create a new child
     def {{ child.id }} : {{ child_class }}?
-      self.{{ foreign_key.id }} ? {{ child_class }}.find(self.{{ foreign_key.id }} )
-                                : {{ child_class }}.new
+      child = self.{{ assoc_var }}
+      return child unless child.nil?
+
+      self.{{ assoc_var }} = self.{{ foreign_key.id }} ? {{ child_class }}.find(self.{{ foreign_key.id }})
+                                                       : nil
     end
 
     def {{ child.id }}! : {{ child_class }}
-      {{ child_class }}.find(self.{{ foreign_key.id }} )
+      child = self.{{ assoc_var }}
+      return child unless child.nil?
+      return {{ child_class }}.new if self.{{ foreign_key.id }}.nil?
+
+      self.{{ assoc_var }} = {{ child_class }}.find!(self.{{ foreign_key.id }} )
     end
 
     def {{ child.id }}=(child)
+      self.{{ assoc_var }} = child
       self.{{ foreign_key.id }} = child.id
+    end
+
+    def reset_associations
+      self.{{ assoc_var }} = nil
     end
   end
 
   # Must be used in conjunction with the belongs_to macro
-  macro has_many(child_class, collection_name = nil, dependent = :none, through = nil)
+  macro has_many(child_class, collection_name = nil, dependent = :none)
     {% child_collection = (collection_name ? collection_name : child_class + 's').underscore.downcase %}
     {% association_method = child_collection.id.symbolize %}
 
@@ -91,5 +121,9 @@ module RethinkORM::Associations
 
     before_destroy :destroy_{{ method.id }}
     {% end %}
+  end
+
+  def reset_associations
+    # noop
   end
 end

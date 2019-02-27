@@ -123,4 +123,20 @@ describe RethinkORM::Associations do
     parent.delete
     Parent.exists?(parent.id).should be_false
   end
+
+  it "should cache associations" do
+    parent = Parent.create!(name: "Joe")
+    child = Child.create!(age: 29, parent_id: parent.id)
+
+    child.parent!.should eq parent
+    parent.delete
+
+    # parent cached event when parent deleted
+    child.parent!.should eq parent
+
+    # reload triggers reset of cached associations
+    child.reload
+    child.parent.should eq nil
+    child.destroy
+  end
 end

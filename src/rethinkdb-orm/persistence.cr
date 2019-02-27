@@ -138,14 +138,10 @@ module RethinkORM::Persistence
     __delete
   end
 
-  # Reloads the record from the database.
-  #
-  # Finds record by its key and modifies the receiver in-place:
-  # Throws Error::DocumentNotFound if document fails to load
   def reload
-    raise Error::DocumentNotSaved.new("Cannot reload unpersisted document") unless persisted?
+    raise RethinkORM::Error::DocumentNotSaved.new("Cannot reload unpersisted document") unless persisted?
 
-    loaded = {{ @type }}.find!(@id)
+    loaded = self.class.find!(@id)
 
     # TODO: Make this faster by updating active-model to accept generic hashes
     new_attributes = loaded.attributes.reduce({} of String => String) do |attrs, kv|
@@ -157,8 +153,8 @@ module RethinkORM::Persistence
     end
     assign_attributes(new_attributes)
 
-    # TODO: after implementing cache of association, reset_associations here
     clear_changes_information
+    reset_associations
     self
   end
 
