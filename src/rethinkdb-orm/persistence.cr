@@ -23,12 +23,21 @@ module RethinkORM::Persistence
   getter? destroyed = false
 
   macro included
+
+    # Set the uuid generator for models
+    @@uuid_generator = IdGenerator
+
+    # Allow user defined uuid generator
+    def uuid_generator=(generator : Class)
+      @@uuid_generator = generator
+    end
+
     # Creates the model
     #
     # Raises a RethinkORM::Error::DocumentNotSaved if failed to created
     def self.create!(**attributes)
       document = new(**attributes)
-      raise Error::DocumentNotSaved.new("Failed to create document!") unless document.save
+      raise RethinkORM::Error::DocumentNotSaved.new("Failed to create document!") unless document.save
       document
     end
 
@@ -59,8 +68,6 @@ module RethinkORM::Persistence
         ])
       end
     end
-
-    property uuid_generator = IdGenerator
   end
 
   # Saves the model.
@@ -68,7 +75,7 @@ module RethinkORM::Persistence
   # If the model is new, a record gets created in the database, otherwise
   # the existing record gets updated.
   def save(**options)
-    raise Error::DocumentInvalid.new("Cannot save a destroyed document!") if destroyed?
+    raise RethinkORM::Error::DocumentInvalid.new("Cannot save a destroyed document!") if destroyed?
     return false unless valid?
 
     new_record? ? __create(**options) : __update(**options)
@@ -80,7 +87,7 @@ module RethinkORM::Persistence
   # the existing record gets updated.
   # Raises RethinkORM::Error:DocumentInvalid on validation failure
   def save!(**options)
-    raise Error::DocumentInvalid.new("Failed to save the document") unless self.save(**options)
+    raise RethinkORM::Error::DocumentInvalid.new("Failed to save the document") unless self.save(**options)
     self
   end
 
@@ -94,15 +101,15 @@ module RethinkORM::Persistence
 
   # Updates the model in place
   #
-  # Throws Error::DocumentInvalid on update failure
+  # Throws RethinkORM::Error::DocumentInvalid on update failure
   def update!(**attributes)
     updated = self.update(**attributes)
-    raise Error::DocumentInvalid.new("Failed to update the document", self) unless updated
+    raise RethinkORM::Error::DocumentInvalid.new("Failed to update the document", self) unless updated
     self
   end
 
   def update_fields(**attributes)
-    raise Error::DocumentInvalid.new("Cannot update fields a new document!") if new_record?
+    raise RethinkORM::Error::DocumentInvalid.new("Cannot update fields a new document!") if new_record?
 
     assign_attributes(**attributes)
     response = Connection.raw do |q|
@@ -185,7 +192,7 @@ module RethinkORM::Persistence
       run_save_callbacks do
         # TODO: Allow user to tag an attribute as primary key.
         #       Requires either changing default primary key or using secondary index
-        @id ||= self.uuid_generator.next(self)
+        @id ||= @@uuid_generator.next(self)
 
         # response = RethinkORM.table_guard(@@table_name) do
         # response = RethinkORM.table_guard(@@table_name) do

@@ -17,7 +17,6 @@ module RethinkORM::Queries
     def self.changes(id : String? = nil)
       changes_cursor = id ? table_query { |q| q.get(id).changes }
                           : table_query { |q| q.changes }
-      # pp! changes_cursor.each
       Changefeed(self).new(changes_cursor)
     end
 
