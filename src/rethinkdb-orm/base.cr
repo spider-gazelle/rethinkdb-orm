@@ -6,12 +6,14 @@ require "./index"
 require "./persistence"
 require "./queries"
 require "./table"
+require "./error"
 
 require "./validators/*"
 
 abstract class RethinkORM::Base < ActiveModel::Model
   include ActiveModel::Validation
   include ActiveModel::Callbacks
+
   include Associations
   include Index
   include Persistence

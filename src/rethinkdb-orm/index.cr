@@ -4,7 +4,7 @@ module RethinkORM::Index
   end
 
   macro included
-    def self.has_index(field)
+    def self.has_index?(field)
       RethinkORM::Base::INDICES.any? do |index|
         self.table_name == index[:table] && field == index[:field]
       end
