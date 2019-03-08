@@ -8,7 +8,7 @@ module RethinkORM::Associations
     {% assoc_var = ("__" + parent_name.id.stringify).id %}
     {% association_method = parent_name.id.symbolize %}
 
-    attribute {{ foreign_key.id }} : String
+    attribute {{ foreign_key.id }} : String, parent: {{ parent_class.id.stringify }}
     property {{ assoc_var }} : {{ parent_class }}?
     destroy_callback({{association_method}}, {{dependent}})
 
