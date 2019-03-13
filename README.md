@@ -111,7 +111,7 @@ Parameter |                                     | Default
 --------- | ----------------------------------- | -------
 `id`      | id of document to watch for changes | nil
 
-Returns an iterator that emits `NamedTuple(value: T | Nil, event: Event)`
+Returns an iterator that emits `NamedTuple(value: T | Nil, event: Event, id: String)`
 
 ```crystal
 enum Event
@@ -119,9 +119,7 @@ enum Event
   Updated
   Deleted
 end
-```
 
-```crystal
 class Game < RethinkORM::Base
   attribute type : String
   attribute score : Int32, default: 0
