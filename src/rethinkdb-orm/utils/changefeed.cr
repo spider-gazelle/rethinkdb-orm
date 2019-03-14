@@ -28,15 +28,12 @@ class RethinkORM::Changefeed(T)
 
     case {old_val, new_val} # ameba:disable Lint/LiteralInCondition
     when {nil, _}
-      id = new_val.try(&.id) || ""
-      {value: new_val, event: Event::Created, id: id}
+      {value: new_val, event: Event::Created}
     when {_, nil}
-      id = old_val.try(&.id) || ""
-      {value: nil, event: Event::Deleted, id: id}
+      {value: old_val, event: Event::Deleted}
     else
-      id = new_val.try(&.id) || ""
       updated = apply_changes(old_val, new_val)
-      {value: updated, event: Event::Updated, id: id}
+      {value: updated, event: Event::Updated}
     end
   end
 

@@ -111,15 +111,13 @@ Parameter |                                     | Default
 --------- | ----------------------------------- | -------
 `id`      | id of document to watch for changes | nil
 
-Returns an iterator that emits `NamedTuple(value: T | Nil, event: Event, id: String)`
+Returns an iterator that emits `NamedTuple(value: T, event: Event)`<br>
+
+- `Changefeed::Event::Deleted` events yield the deleted model
+- `Changefeed::Event::Created` events yield the created model
+- `Changefeed::Event::Updated` events yield the updated model
 
 ```crystal
-enum Event
-  Created
-  Updated
-  Deleted
-end
-
 class Game < RethinkORM::Base
   attribute type : String
   attribute score : Int32, default: 0
