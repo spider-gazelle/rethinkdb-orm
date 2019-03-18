@@ -26,7 +26,9 @@ abstract class RethinkORM::Base < ActiveModel::Model
 
   macro inherited
     macro finished
+      {% unless @type.abstract? %}
       __process_table__
+      {% end %}
     end
   end
 
