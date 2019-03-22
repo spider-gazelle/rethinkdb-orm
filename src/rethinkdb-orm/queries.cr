@@ -98,7 +98,8 @@ module RethinkORM::Queries
     # Returns a count of all documents in the table
     #
     def self.count
-      table_query { |q| q.count }
+      result = table_query { |q| q.count }
+      result.try(&.as_i) || 0
     end
 
     private def self.table_query
