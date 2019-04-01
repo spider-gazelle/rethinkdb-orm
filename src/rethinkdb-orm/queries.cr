@@ -32,21 +32,21 @@ module RethinkORM::Queries
     # Find single document by id
     #
     def self.find(id, **options)
-      documents = find_all(id, **options)
+      documents = find_all([id], **options)
       documents.first?
     end
 
     # Look up document by id
     #
-    def self.find_all(*ids, **options)
-      get_all(*ids, **options)
+    def self.find_all(ids, **options)
+      get_all(ids, **options)
     end
 
     # Query by ids, optionally set a secondary index
     #
-    def self.get_all(*ids, **options)
+    def self.get_all(ids, **options)
       result = table_query do |q|
-        q.get_all(ids.to_a, **options)
+        q.get_all(ids, **options)
       end
 
       Collection(self).new(result.each)

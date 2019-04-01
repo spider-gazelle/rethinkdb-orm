@@ -21,7 +21,7 @@ module RethinkORM::Validators
 
         {% if create_index %}
           # Utilise generated secondary index
-          instance = self.get_all(value, index: {{ field.id.stringify }}).to_a.shift?
+          instance = self.get_all([value], index: {{ field.id.stringify }}).to_a.shift?
         {% else %}
           # Otherwise, fallback to where query
           instance = self.where({{field.id}}: value).to_a.shift?
