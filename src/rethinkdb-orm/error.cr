@@ -12,6 +12,11 @@ class RethinkORM::Error < Exception
   end
 
   class DocumentInvalid < Error
+    getter model
+
+    def initialize(@model : RethinkORM::Base, message)
+      super(message)
+    end
   end
 
   class DocumentNotSaved < Error

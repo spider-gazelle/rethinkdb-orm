@@ -26,7 +26,7 @@ class RethinkORM::Changefeed(T)
       T.from_trusted_json val.to_json unless val.nil?
     end
 
-    case {old_val, new_val} # ameba:disable Lint/LiteralInCondition
+    case {old_val, new_val}
     when {nil, _}
       {value: new_val, event: Event::Created}
     when {_, nil}

@@ -75,7 +75,7 @@ module RethinkORM::Persistence
   # If the model is new, a record gets created in the database, otherwise
   # the existing record gets updated.
   def save(**options)
-    raise RethinkORM::Error::DocumentInvalid.new("Cannot save a destroyed document!") if destroyed?
+    raise RethinkORM::Error::DocumentNotSaved.new("Cannot save a destroyed document!") if destroyed?
     return false unless valid?
 
     new_record? ? __create(**options) : __update(**options)
@@ -87,7 +87,7 @@ module RethinkORM::Persistence
   # the existing record gets updated.
   # Raises RethinkORM::Error:DocumentInvalid on validation failure
   def save!(**options)
-    raise RethinkORM::Error::DocumentInvalid.new("Failed to save the document") unless self.save(**options)
+    raise RethinkORM::Error::DocumentInvalid.new(self, "Failed to save the document") unless self.save(**options)
     self
   end
 
@@ -104,12 +104,12 @@ module RethinkORM::Persistence
   # Throws RethinkORM::Error::DocumentInvalid on update failure
   def update!(**attributes)
     updated = self.update(**attributes)
-    raise RethinkORM::Error::DocumentInvalid.new("Failed to update the document", self) unless updated
+    raise RethinkORM::Error::DocumentInvalid.new(self, "Failed to update the document") unless updated
     self
   end
 
   def update_fields(**attributes)
-    raise RethinkORM::Error::DocumentInvalid.new("Cannot update fields a new document!") if new_record?
+    raise RethinkORM::Error::DocumentNotSaved.new("Cannot update fields a new document!") if new_record?
 
     assign_attributes(**attributes)
     response = Connection.raw do |q|
