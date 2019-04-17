@@ -108,14 +108,23 @@ module RethinkORM::Persistence
     self
   end
 
+  # Highly inefficient serialization of model subset.
+  protected def subset_json(fields : Enumerable(String) | Enumerable(Symbol))
+    string_keys = fields.is_a?(Enumerable(String)) ? fields : fields.map(&.to_s)
+    JSON.parse(self.to_json).as_h.select!(string_keys).to_json
+  end
+
+  # Atomically update fields, without running callbacks
   def update_fields(**attributes)
-    raise RethinkORM::Error::DocumentNotSaved.new("Cannot update fields a new document!") if new_record?
+    raise RethinkORM::Error::DocumentNotSaved.new("Cannot update fields of a new document!") if new_record?
 
     assign_attributes(**attributes)
+    update_body = subset_json(attributes.keys)
+
     response = Connection.raw do |q|
       q.table(@@table_name)
         .get(@id)
-        .update(self.persistent_attributes)
+        .raw_update(update_body)
     end
 
     replaced = response["replaced"]?.try(&.as_i?) || 0
@@ -145,6 +154,12 @@ module RethinkORM::Persistence
     __delete
   end
 
+  # Reload the model in place.
+  #
+  # Throws
+  # - RethinkORM::Error::DocumentNotSaved : If document was not previously persisted
+  # - RethinkORM::Error::DocumentNotFound : If document fails to load
+  #
   def reload
     raise RethinkORM::Error::DocumentNotSaved.new("Cannot reload unpersisted document") unless persisted?
 
@@ -165,6 +180,8 @@ module RethinkORM::Persistence
     self
   end
 
+  # Internal update function, runs callbacks and pushes update to RethinkDB
+  # 
   protected def __update(**options)
     return false unless valid?
     return true unless changed?
@@ -174,19 +191,23 @@ module RethinkORM::Persistence
         response = Connection.raw do |q|
           q.table(@@table_name)
             .get(@id)
-            .update(self.persistent_attributes, **options)
+            .raw_update(self.to_json, **options)
         end
 
         # TODO: Extend active-model to include previous changes
         # TODO: Update associations
-        clear_changes_information
         replaced = response["replaced"]?.try(&.as_i?) || 0
         updated = response["updated"]?.try(&.as_i?) || 0
-        replaced > 0 || updated > 0
+        success = replaced > 0 || updated > 0
+
+        clear_changes_information if success
+        success
       end
     end
   end
 
+  # Internal create function, runs callbacks and pushes new model to RethinkDB
+  # 
   protected def __create(**options)
     run_create_callbacks do
       run_save_callbacks do
@@ -194,22 +215,17 @@ module RethinkORM::Persistence
         #       Requires either changing default primary key or using secondary index
         @id ||= @@uuid_generator.next(self)
 
-        # response = RethinkORM.table_guard(@@table_name) do
-        # response = RethinkORM.table_guard(@@table_name) do
-        # Connection.raw do |q|
         response = Connection.raw do |q|
-          q.table(@@table_name).insert(self.persistent_attributes, **options)
+          q.table(@@table_name).raw_insert(self.to_json, **options)
         end
-        # end
 
         # Set primary key if receiveing generated_key
         @id ||= response["generated_keys"]?.try(&.[0]?).try(&.to_s)
 
-        # TODO: Create associations
-        clear_changes_information
+        success = (response["inserted"]?.try(&.as_i?) || 0) > 0
 
-        inserted = response["inserted"]?.try(&.as_i?) || 0
-        inserted > 0
+        clear_changes_information if success
+        success
       end
     end
   end
