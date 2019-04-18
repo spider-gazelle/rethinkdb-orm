@@ -7,6 +7,7 @@ class RethinkORM::Collection(T)
 
   def next
     result = wrapped_next
+
     if result == Iterator::Stop::INSTANCE
       stop
     else

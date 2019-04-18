@@ -97,104 +97,6 @@ describe RethinkORM::Persistence do
     model.persisted?.should be_false
   end
 
-  describe "callbacks" do
-    it "should execute callbacks" do
-      model = ModelWithCallbacks.new
-
-      # Test initialize
-      model.name.should eq nil
-      model.age.should eq 10
-      model.address.should eq nil
-
-      model.new_record?.should be_true
-      model.destroyed?.should be_false
-      model.persisted?.should be_false
-
-      # Test create
-      model.save.should be_true
-
-      model.name.should eq "bob"
-      model.age.should eq 10
-      model.address.should eq "23"
-
-      # Test Update
-      model.address = "other"
-      model.address.should eq "other"
-      model.save.should be_true
-
-      model.name.should eq "bob"
-      model.age.should eq 30
-      model.address.should eq "23"
-
-      # Test destroy
-      model.destroy
-      model.new_record?.should be_false
-      model.destroyed?.should be_true
-      model.persisted?.should be_false
-
-      model.name.should eq "joe"
-    end
-
-    it "should skip destroy callbacks on delete" do
-      model = ModelWithCallbacks.new
-
-      # Test initialize
-      model.name.should eq nil
-      model.age.should eq 10
-      model.address.should eq nil
-
-      model.new_record?.should be_true
-      model.destroyed?.should be_false
-      model.persisted?.should be_false
-
-      # Test create
-      model.save.should be_true
-
-      # Test delete
-      model.delete
-      model.new_record?.should be_false
-      model.destroyed?.should be_true
-      model.persisted?.should be_false
-
-      model.name.should eq "bob"
-    end
-
-    it "should skip callbacks when updating fields" do
-      model = ModelWithCallbacks.new
-
-      # Test initialize
-      model.name.should eq nil
-      model.age.should eq 10
-      model.address.should eq nil
-
-      model.new_record?.should be_true
-      model.destroyed?.should be_false
-      model.persisted?.should be_false
-
-      # Test create
-      result = model.save
-      result.should be_true
-
-      model.name.should eq "bob"
-      model.age.should eq 10
-      model.address.should eq "23"
-
-      # Test Update
-      model.update_fields(address: "other")
-      model.address.should eq "other"
-      loaded = ModelWithCallbacks.find model.id
-      loaded.try(&.address).should eq "other"
-
-      # Test delete skipping callbacks
-      model.delete
-      model.new_record?.should be_false
-      model.destroyed?.should be_true
-      model.persisted?.should be_false
-
-      model.name.should eq "bob"
-    end
-  end
-
   it "should reload a model" do
     model = BasicModel.new
 
@@ -442,6 +344,14 @@ describe RethinkORM::Persistence do
 
       model.name.should eq "bob"
     end
+  end
+
+  it "should save/load fields with converters" do
+    time = Time.unix(rand(1000000))
+    model = ConvertedFields.create!(name: "gremlin", time: time)
+    loaded = ConvertedFields.find!(model.id)
+
+    loaded.time.should eq model.time
   end
 
   it "should reload a model" do

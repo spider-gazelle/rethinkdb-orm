@@ -121,10 +121,10 @@ module RethinkORM::Persistence
     assign_attributes(**attributes)
     update_body = subset_json(attributes.keys)
 
-    response = Connection.raw do |q|
+    response = Connection.raw_json(update_body) do |q, doc|
       q.table(@@table_name)
         .get(@id)
-        .raw_update(update_body)
+        .update(doc)
     end
 
     replaced = response["replaced"]?.try(&.as_i?) || 0
@@ -181,17 +181,17 @@ module RethinkORM::Persistence
   end
 
   # Internal update function, runs callbacks and pushes update to RethinkDB
-  # 
+  #
   protected def __update(**options)
     return false unless valid?
     return true unless changed?
 
     run_update_callbacks do
       run_save_callbacks do
-        response = Connection.raw do |q|
+        response = Connection.raw_json(self.to_json) do |q, doc|
           q.table(@@table_name)
             .get(@id)
-            .raw_update(self.to_json, **options)
+            .update(doc, **options)
         end
 
         # TODO: Extend active-model to include previous changes
@@ -207,7 +207,7 @@ module RethinkORM::Persistence
   end
 
   # Internal create function, runs callbacks and pushes new model to RethinkDB
-  # 
+  #
   protected def __create(**options)
     run_create_callbacks do
       run_save_callbacks do
@@ -215,8 +215,8 @@ module RethinkORM::Persistence
         #       Requires either changing default primary key or using secondary index
         @id ||= @@uuid_generator.next(self)
 
-        response = Connection.raw do |q|
-          q.table(@@table_name).raw_insert(self.to_json, **options)
+        response = Connection.raw_json(self.to_json) do |q, doc|
+          q.table(@@table_name).insert(doc, **options)
         end
 
         # Set primary key if receiveing generated_key

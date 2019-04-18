@@ -1,3 +1,5 @@
+require "time"
+
 require "../src/rethinkdb-orm/*"
 require "../src/rethinkdb-orm/**"
 
@@ -51,6 +53,11 @@ end
 class LittleBitPersistent < RethinkORM::Base
   attribute name : String
   attribute age : Int32, persistence: false
+end
+
+class ConvertedFields < RethinkORM::Base
+  attribute name : String
+  attribute time : Time, converter: Time::EpochConverter
 end
 
 # Association Models

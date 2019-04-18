@@ -36,6 +36,14 @@ class RethinkORM::Connection
     query.run(self.db)
   end
 
+  # Passes query builder and datum term of supplied raw json string
+  #
+  def self.raw_json(json : String)
+    self.raw do |q|
+      yield q, q.json(json)
+    end
+  end
+
   # Lazily check for and create non-existant resources in rethink
   #
   # TODO: support more configuration for db/table sharding and replication

@@ -11,7 +11,7 @@ dependencies:
   crystal-rethinkdb:
     # github: kingsleyh/crystal-rethinkdb
     github: aca-labs/crystal-rethinkdb
-    branch: raw
+    branch: json
   habitat:
     github: luckyframework/habitat
 
