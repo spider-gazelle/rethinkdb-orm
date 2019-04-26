@@ -95,14 +95,14 @@ module RethinkORM::Associations
   end
 
   # Must be used in conjunction with the belongs_to macro
-  macro has_many(child_class, collection_name = nil, dependent = :none)
+  macro has_many(child_class, collection_name = nil, dependent = :none, foreign_key = nil)
     {% child_collection = (collection_name ? collection_name : child_class + 's').underscore.downcase %}
     {% association_method = child_collection.id.symbolize %}
 
     destroy_callback({{association_method}}, {{ dependent }})
 
     def {{ child_collection.id }}
-      RethinkORM::AssociationCollection(self, {{ child_class }}).new(self)
+      RethinkORM::AssociationCollection(self, {{ child_class }}).new(self, {{ foreign_key }})
     end
   end
 

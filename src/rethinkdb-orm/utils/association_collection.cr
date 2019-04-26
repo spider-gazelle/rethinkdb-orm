@@ -3,8 +3,8 @@ require "../index"
 class RethinkORM::AssociationCollection(Owner, Target)
   forward_missing_to all
 
-  def initialize(@owner)
-    @foreign_key = Owner.name.underscore.downcase.gsub(/::/, "_") + "_id"
+  def initialize(@owner, foreign_key = nil)
+    @foreign_key = !foreign_key ? "#{Owner.table_name}_id" : foreign_key
   end
 
   def all
