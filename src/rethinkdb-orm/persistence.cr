@@ -109,6 +109,7 @@ module RethinkORM::Persistence
   end
 
   # Highly inefficient serialization of model subset.
+  # FIXME: optimise
   protected def subset_json(fields : Enumerable(String) | Enumerable(Symbol))
     string_keys = fields.is_a?(Enumerable(String)) ? fields : fields.map(&.to_s)
     JSON.parse(self.to_json).as_h.select!(string_keys).to_json

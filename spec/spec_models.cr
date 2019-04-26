@@ -110,6 +110,23 @@ class UnneccesarilyLongNameThatWillProduceAStupidTableName < RethinkORM::Base
   attribute why : String
 end
 
+# Query model
+class Tree < RethinkORM::Base
+  attribute roots : Array(String) = ->{ [] of String }
+
+  def self.by_root_id(id)
+    Tree.raw_query do |q|
+      q.table(Tree.table_name).filter do |doc|
+        doc["roots"].contains(id)
+      end
+    end
+  end
+end
+
+class Root < RethinkORM::Base
+  attribute length : Float32
+end
+
 # Validation models
 
 class Snowflake < RethinkORM::Base

@@ -52,6 +52,17 @@ module RethinkORM::Queries
       Collection(self).new(result.each)
     end
 
+
+    # Raw query, attempt to marshall result into a collection of models
+    # def self.raw_query
+    #   result = table_query do |q|
+    #     query = yield q
+    #     pp! query
+    #     query
+    #   end
+    #   Collection(self).new(result.each)
+    # end
+
     # Check for document presence in the table
     #
     def self.exists?(id)
@@ -85,6 +96,19 @@ module RethinkORM::Queries
     def self.where(attrs : Hash)
       result = table_query do |q|
         q.filter(attrs)
+      end
+      Collection(self).new(result.each)
+    end
+
+    # **Unsafe** method until `where` can accept more generic arguments
+    # Makes 2 **LARGE** assumptions
+    # - User correctly scopes the query under the right table
+    # - User forms a query that returns a collection of models
+    #
+    # Should raise/not compile on malformed query/incorrect return type to create a collection
+    def self.raw_query
+      result = Connection.raw do |q|
+        yield q
       end
       Collection(self).new(result.each)
     end
