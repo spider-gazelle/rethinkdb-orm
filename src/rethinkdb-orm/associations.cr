@@ -3,21 +3,21 @@ require "./utils/association_collection"
 module RethinkORM::Associations
   # Defines getter and setter for parent relationship
   macro belongs_to(parent_class, dependent = :none, create_index = true)
-    {% parent_name = parent_class.id.underscore.downcase.gsub(/::/, "_") %}
+    {% parent_name = parent_class.id.stringify.underscore.downcase.gsub(/::/, "_") %}
     {% foreign_key = parent_name + "_id" %}
-    {% assoc_var = ("__" + parent_name.id.stringify).id %}
+    {% assoc_var = ("__" + parent_name).id %}
     {% association_method = parent_name.id.symbolize %}
 
     attribute {{ foreign_key.id }} : String, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
     property {{ assoc_var }} : {{ parent_class }}?
-    destroy_callback({{association_method}}, {{dependent}})
+    destroy_callback({{ association_method }}, {{dependent}})
 
     {% if create_index %}
       secondary_index({{ foreign_key.id }})
     {% end %}
 
     # Retrieves the parent relationship
-    def {{ parent_name }} : {{ parent_class }}?
+    def {{ parent_name.id }} : {{ parent_class }}?
       parent = self.{{ assoc_var.id }}
       return parent unless parent.nil?
 
@@ -25,7 +25,7 @@ module RethinkORM::Associations
                                                           : {{ parent_class }}.new
     end
 
-    def {{ parent_name }}! : {{ parent_class }}
+    def {{ parent_name.id }}! : {{ parent_class }}
       parent = self.{{ assoc_var.id }}
       return parent unless parent.nil?
       return {{ parent_class }}.new if self.{{ foreign_key.id }}.nil?
@@ -34,9 +34,9 @@ module RethinkORM::Associations
     end
 
     # Sets the parent relationship
-    def {{ parent_name }}=(parent)
+    def {{ parent_name.id }}=(parent : {{ parent_class }})
       self.{{ assoc_var }} = parent
-      self.{{ foreign_key }} = parent.id
+      self.{{ foreign_key.id }} = parent.id
     end
 
     def reset_associations
@@ -44,7 +44,7 @@ module RethinkORM::Associations
     end
 
     # Look up instances of this model dependent on the foreign key
-    def self.by_{{ foreign_key }}(id)
+    def self.by_{{ foreign_key.id }}(id)
       if self.has_index?({{ foreign_key.id.stringify }})
         self.get_all([id], index: {{ foreign_key.id.stringify }})
       else
