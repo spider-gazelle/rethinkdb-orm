@@ -9,9 +9,7 @@ dependencies:
     github: spider-gazelle/active-model
     branch: master
   crystal-rethinkdb:
-    # github: kingsleyh/crystal-rethinkdb
-    github: aca-labs/crystal-rethinkdb
-    branch: json
+    github: kingsleyh/crystal-rethinkdb
   habitat:
     github: luckyframework/habitat
 
