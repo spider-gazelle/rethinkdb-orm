@@ -4,8 +4,8 @@ include RethinkDB::Shortcuts
 
 class RethinkORM::Connection
   Habitat.create do
-    setting host : String = "localhost"
-    setting port : Int32 = 28015
+    setting host : String = ENV["RETHINKDB_HOST"]? || "localhost"
+    setting port : Int32 = (ENV["RETHINKDB_PORT"]? || 28015).to_i
     setting db : String = "test"
     setting user : String = "admin"
     setting password : String = ""
