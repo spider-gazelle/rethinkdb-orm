@@ -1,4 +1,5 @@
 require "spec"
+require "faker"
 
 require "../src/rethinkdb-orm"
 require "../src/rethinkdb-orm/*"

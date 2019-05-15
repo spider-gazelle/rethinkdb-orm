@@ -79,14 +79,14 @@ module RethinkORM::Queries
 
     # Returns documents for which predicate block is true
     #
-    def self.where(&predicate : -> Bool)
+    def self.where(&predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
       result = table_query do |q|
         q.filter(&predicate)
       end
       Collection(self).new(result.each)
     end
 
-    def self.where(**attrs, &predicate : -> Bool)
+    def self.where(**attrs, &predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
       result = table_query do |q|
         q.filter(attrs).filter(&predicate)
       end
@@ -123,6 +123,31 @@ module RethinkORM::Queries
     #
     def self.count
       result = table_query { |q| q.count }
+      result.try(&.as_i) || 0
+    end
+
+    # Returns a count of all documents in the table
+    #
+    def self.count(**attrs)
+      result = table_query { |q| q.filter(attrs).count }
+      result.try(&.as_i) || 0
+    end
+
+    # Returns a count of documents for which predicate block is true
+    #
+    def self.count(&predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
+      result = table_query do |q|
+        q.filter(&predicate).count
+      end
+      result.try(&.as_i) || 0
+    end
+
+    # Returns a count of documents for which predicate block is true
+    #
+    def self.count(**attrs, &predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
+      result = table_query do |q|
+        q.filter(attrs).filter(&predicate).count
+      end
       result.try(&.as_i) || 0
     end
 

@@ -12,15 +12,64 @@ describe RethinkORM::Queries do
     models.all? { |m| m.name == "Psyduck" }.should be_true
   end
 
-  it "#count" do
-    BasicModel.clear
+  describe "#count" do
+    it "tallys the documents in a table" do
+      BasicModel.clear
 
-    num_documents = 5
-    num_documents.times { BasicModel.create(name: "Wheezer") }
+      num_correct = 5
+      correct_documents = Array.new(size: num_correct) do |_|
+        BasicModel.create!(name: "Wheezer", age: 10)
+      end
 
-    count = BasicModel.count
-    count.should be_a(Int32)
-    count.should eq num_documents
+      count = BasicModel.count
+      count.should be_a(Int32)
+      count.should eq num_correct
+      correct_documents.each &.destroy
+    end
+
+    it "tallys the documents with specific attributes" do
+      num_correct = 3
+      num_incorrect = 4
+      correct_name = Faker::Name.name
+      incorrect_name = Faker::Name.name
+
+      correct_documents = Array.new(size: num_correct) do |_|
+        BasicModel.create!(name: correct_name, age: 10)
+      end
+
+      incorrect_documents = Array.new(size: num_incorrect) do |_|
+        BasicModel.create!(name: incorrect_name, age: 10)
+      end
+
+      total = BasicModel.count
+      correct_count = BasicModel.count(name: correct_name)
+      incorrect_count = BasicModel.count(name: incorrect_name)
+
+      correct_count.should eq num_correct
+      incorrect_count.should eq num_incorrect
+      total.should eq (num_correct + num_incorrect)
+
+      correct_documents.each &.destroy
+      incorrect_documents.each &.destroy
+    end
+
+    it "tallys the documents that satisfy a predicate" do
+      name = Faker::Name.name
+      num_documents = 5
+      documents = Array.new(size: num_documents) do |idx|
+        BasicModel.create!(name: name, age: idx)
+      end
+
+      total = BasicModel.count(name: name)
+      lt3 = BasicModel.count(name: name) do |doc|
+        doc["age"] < 3
+      end
+
+      total.should eq num_documents
+      lt3.should eq 3
+
+      documents.each &.destroy
+    end
   end
 
   it "#raw_query" do
