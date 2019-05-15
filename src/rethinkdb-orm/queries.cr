@@ -52,17 +52,6 @@ module RethinkORM::Queries
       Collection(self).new(result.each)
     end
 
-
-    # Raw query, attempt to marshall result into a collection of models
-    # def self.raw_query
-    #   result = table_query do |q|
-    #     query = yield q
-    #     pp! query
-    #     query
-    #   end
-    #   Collection(self).new(result.each)
-    # end
-
     # Check for document presence in the table
     #
     def self.exists?(id)
