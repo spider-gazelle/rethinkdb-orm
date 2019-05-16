@@ -161,12 +161,11 @@ module RethinkORM::Persistence
   # - RethinkORM::Error::DocumentNotSaved : If document was not previously persisted
   # - RethinkORM::Error::DocumentNotFound : If document fails to load
   #
-  def reload
+  def reload!
     raise RethinkORM::Error::DocumentNotSaved.new("Cannot reload unpersisted document") unless persisted?
-
     loaded = self.class.find!(@id)
 
-    # TODO: Make this faster by updating active-model to accept generic hashes
+    # TODO: Make this faster by updating active-model to accept generic hashes, or at least the attributes hash of the same class
     new_attributes = loaded.attributes.reduce({} of String => String) do |attrs, kv|
       key, value = kv
       unless value.nil?
@@ -174,10 +173,12 @@ module RethinkORM::Persistence
       end
       attrs
     end
+
     assign_attributes(new_attributes)
 
     clear_changes_information
     reset_associations
+
     self
   end
 

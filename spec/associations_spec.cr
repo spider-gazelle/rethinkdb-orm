@@ -135,7 +135,7 @@ describe RethinkORM::Associations do
     child.parent!.should eq parent
 
     # reload triggers reset of cached associations
-    child.reload
+    child.reload!
     child.parent.should eq nil
     child.destroy
   end
