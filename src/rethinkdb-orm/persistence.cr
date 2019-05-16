@@ -199,7 +199,8 @@ module RethinkORM::Persistence
         # TODO: Update associations
         replaced = response["replaced"]?.try(&.as_i?) || 0
         updated = response["updated"]?.try(&.as_i?) || 0
-        success = replaced > 0 || updated > 0
+        unchanged = response["unchanged"]?.try(&.as_i?) || 0
+        success = replaced > 0 || updated > 0 || unchanged > 0
 
         clear_changes_information if success
         success
