@@ -18,6 +18,12 @@ class RethinkORM::Changefeed(T)
     else
       parse_changes result
     end
+  rescue e
+    if e.message =~ /Changefeed aborted/
+      stop
+    else
+      raise e
+    end
   end
 
   private def parse_changes(result)
