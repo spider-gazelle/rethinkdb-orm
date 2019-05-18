@@ -6,9 +6,9 @@ class RethinkORM::Connection
   Habitat.create do
     setting host : String = ENV["RETHINKDB_HOST"]? || "localhost"
     setting port : Int32 = (ENV["RETHINKDB_PORT"]? || 28015).to_i
-    setting db : String = "test"
-    setting user : String = "admin"
-    setting password : String = ""
+    setting db : String = ENV["RETHINKDB_DATABASE"]? || "test"
+    setting user : String = ENV["RETHINKDB_USER"]? || "admin"
+    setting password : String = ENV["RETHINKDB_PASSWORD"]? || ""
   end
 
   @@resource_check = false
