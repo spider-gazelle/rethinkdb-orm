@@ -51,21 +51,9 @@ module RethinkORM::Persistence
 
     # Removes all records from the table
     #
-    # :remove_table does not recreate the table
-    def self.clear(remove_table=false)
+    def self.clear
       Connection.raw do |q|
-        q.expr([
-          # Drop table
-          q.table_drop(@@table_name),
-          # Create table to persist table unless specified
-          q.branch(
-            # if
-            remove_table,
-            # then
-            {"tables_dropped": 1},
-            # else
-            q.table_create(@@table_name)),
-        ])
+        q.table(@@table_name).delete
       end
     end
   end
