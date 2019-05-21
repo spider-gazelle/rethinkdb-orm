@@ -12,13 +12,45 @@ describe RethinkORM::Queries do
     models.all? { |m| m.name == "Psyduck" }.should be_true
   end
 
+  it "#find!" do
+    model = BasicModel.create!(name: Faker::Name.name)
+    found_model = BasicModel.find!(model.id.not_nil!)
+    found_model.id.should eq model.id
+  end
+
+  describe "#find_all" do
+    it "returns documents matching passed ids" do
+      correct_documents = Array.new(size: 5) do |_|
+        BasicModel.create!(name: Faker::Name.name, age: 10)
+      end
+      ids = (correct_documents.compact_map &.id).sort
+      found_ids = (BasicModel.find_all(ids).to_a.compact_map &.id).sort
+      found_ids.should eq ids
+    end
+
+    it "ignores missing ids" do
+      num_documents = 5
+      correct_documents = Array.new(size: num_documents) do |_|
+        BasicModel.create!(name: Faker::Name.name, age: 10)
+      end
+
+      ids = (correct_documents.compact_map &.id).sort
+      fake_ids = Array.new(size: 5) { |_| Faker::Name.name }
+      all_ids = ids + fake_ids
+
+      found_ids = (BasicModel.find_all(all_ids).to_a.compact_map &.id).sort
+      found_ids.size.should eq num_documents
+      found_ids.should eq ids
+    end
+  end
+
   describe "#count" do
     it "tallys the documents in a table" do
       BasicModel.clear
 
       num_correct = 5
       correct_documents = Array.new(size: num_correct) do |_|
-        BasicModel.create!(name: "Wheezer", age: 10)
+        BasicModel.create!(name: Faker::Name.name, age: 10)
       end
 
       count = BasicModel.count
