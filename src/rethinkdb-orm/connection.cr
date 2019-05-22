@@ -1,5 +1,7 @@
 require "crystal-rethinkdb"
 require "habitat"
+require "mutex"
+
 include RethinkDB::Shortcuts
 
 class RethinkORM::Connection
@@ -12,6 +14,7 @@ class RethinkORM::Connection
   end
 
   @@resource_check = false
+  @@resource_lock = Mutex.new
 
   def self.db
     opts = {
@@ -30,7 +33,7 @@ class RethinkORM::Connection
   # Auto creates the database if its not already present.
   # The block defined query is run and raw results returned.
   def self.raw
-    self.create_resources unless @@resource_check
+    ensure_resources!
 
     query = yield r
     query.run(self.db)
@@ -47,53 +50,57 @@ class RethinkORM::Connection
   # Lazily check for and create non-existant resources in rethink
   #
   # TODO: support more configuration for db/table sharding and replication
-  protected def self.create_resources
-    tables = RethinkORM::Base::TABLES.uniq
-    indices = RethinkORM::Base::INDICES.uniq
+  protected def self.ensure_resources!
+    @@resource_lock.synchronize {
+      return if @@resource_check
 
-    db_check = r.branch(
-      # If db present
-      r.db_list.contains(settings.db),
-      # Then noop
-      {"dbs_created" => 0},
-      # Else create db
-      r.db_create(settings.db),
-    )
+      tables = RethinkORM::Base::TABLES.uniq
+      indices = RethinkORM::Base::INDICES.uniq
 
-    table_queries = tables.map do |table|
-      r.branch(
-        # If table present
-        r.db(settings.db).table_list.contains(table),
+      db_check = r.branch(
+        # If db present
+        r.db_list.contains(settings.db),
         # Then noop
-        {"tables_created" => 0},
-        # Else create table
-        r.db(settings.db).table_create(table)
+        {"dbs_created" => 0},
+        # Else create db
+        r.db_create(settings.db),
       )
-    end
 
-    index_creation = indices.map do |index|
-      table = index[:table]
-      field = index[:field]
+      table_queries = tables.map do |table|
+        r.branch(
+          # If table present
+          r.db(settings.db).table_list.contains(table),
+          # Then noop
+          {"tables_created" => 0},
+          # Else create table
+          r.db(settings.db).table_create(table)
+        )
+      end
 
-      r.branch(
-        # If index present
-        r.db(settings.db).table(table).index_list.contains(field),
-        # Then noop
-        {"created" => 0},
-        # Else create index
-        r.db(settings.db).table(table).index_create(field)
-      )
-    end
+      index_creation = indices.map do |index|
+        table = index[:table]
+        field = index[:field]
 
-    # Block until the table has been created
-    index_existence = indices.map do |index|
-      r.db(settings.db).table(index[:table]).index_wait(index[:field])
-    end
+        r.branch(
+          # If index present
+          r.db(settings.db).table(table).index_list.contains(field),
+          # Then noop
+          {"created" => 0},
+          # Else create index
+          r.db(settings.db).table(table).index_create(field)
+        )
+      end
 
-    # Combine into series of sequentially evaluated expressions
-    r.expr([db_check] + table_queries + index_creation + index_existence).run(self.db)
+      # Block until the table has been created
+      index_existence = indices.map do |index|
+        r.db(settings.db).table(index[:table]).index_wait(index[:field])
+      end
 
-    # TODO: Error check
-    @@resource_check = true
+      # Combine into series of sequentially evaluated expressions
+      r.expr([db_check] + table_queries + index_creation + index_existence).run(self.db)
+
+      # TODO: Error check
+      @@resource_check = true
+    }
   end
 end
