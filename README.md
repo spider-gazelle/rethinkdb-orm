@@ -162,7 +162,7 @@ Parameter               |                                                       
 
 Adds creates `created_at` and `updated_at` attributes.
 - `updated_at` is set through the `before_update` callback, and initially set in the `before_save` callback.
-- `created_at` is set through the `before_update` callback.
+- `created_at` is set through the `before_create` callback.
 
 The generated timestamp is UTC.
 

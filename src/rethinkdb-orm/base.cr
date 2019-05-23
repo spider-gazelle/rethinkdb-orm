@@ -6,6 +6,7 @@ require "./index"
 require "./persistence"
 require "./queries"
 require "./table"
+require "./timestamps"
 require "./error"
 
 require "./validators/*"
