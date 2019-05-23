@@ -157,3 +157,20 @@ Parameter               |                                                       
 `create_index`          | Whether or not to generate a secondary index            | true
 `callback : T -> T`     | Optional function to transform field value              | nil
 `block : T -> T`        | Optional block to transform field value before querying | nil
+
+## Timestamps
+
+Adds creates `created_at` and `updated_at` attributes.
+- `updated_at` is set through the `before_update` callback, and initially set in the `before_save` callback.
+- `created_at` is set through the `before_update` callback.
+
+The generated timestamp is UTC.
+
+```crystal
+class Timo < RethinkORM::Base
+  # Simply include the module
+  include RethinkORM::Timestamps
+
+  attribute name : String
+end
+```

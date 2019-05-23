@@ -144,3 +144,11 @@ class Snowflake < RethinkORM::Base
     value
   end
 end
+
+# Timestamps
+
+class Timo < RethinkORM::Base
+  include RethinkORM::Timestamps
+
+  attribute name : String
+end
