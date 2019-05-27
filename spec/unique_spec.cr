@@ -33,7 +33,28 @@ describe RethinkORM::Validators do
       louder_snowflake.valid?.should be_false
 
       louder_snowflake.errors[0].to_s.should eq "Snowflake personality should be unique"
-      special_snowflake.valid?.should be_true
+    end
+
+    it "passes scoped fields to transform block" do
+      fresh_flake = Snowflake.create!(vibe: "awful", taste: "great")
+      fresh_flake.taste.should eq "great-awful"
+      fresh_flake.valid?.should be_true
+      fresh_flake.taste.should eq "great-awful"
+
+      less_fresh = Snowflake.new(vibe: "awful", taste: "GREAT")
+      less_fresh.valid?.should be_false
+      less_fresh.errors[0].to_s.should eq "Snowflake taste should be unique"
+    end
+
+    it "passes scoped fields to transform callback" do
+      fresh_flake = Snowflake.create!(vibe: "awful", size: 123)
+      fresh_flake.vibe.should eq "awful-123"
+      fresh_flake.valid?.should be_true
+      fresh_flake.vibe.should eq "awful-123"
+
+      less_fresh = Snowflake.new(vibe: "AWFUL", size: 123)
+      less_fresh.valid?.should be_false
+      less_fresh.errors[0].to_s.should eq "Snowflake vibe should be unique"
     end
   end
 end

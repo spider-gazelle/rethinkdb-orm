@@ -133,11 +133,24 @@ class Snowflake < RethinkORM::Base
   attribute shape : String
   attribute meltiness : Int32
   attribute personality : String
+  attribute taste : String
+  attribute vibe : String
+  attribute size : Int32
 
   ensure_unique :meltiness
   ensure_unique :shape, callback: :id
   ensure_unique :personality do |personality|
     personality.downcase
+  end
+
+  ensure_unique scope: [:taste, :vibe], field: :taste do |(taste, vibe)|
+    "#{taste.downcase}-#{vibe.downcase}"
+  end
+
+  ensure_unique scope: [:vibe, :size], field: :vibe, callback: :dip
+
+  def dip(vibe : String, size : Int32)
+    "#{vibe.downcase}-#{size}"
   end
 
   def id(value : T) forall T

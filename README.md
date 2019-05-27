@@ -90,10 +90,6 @@ Parameter         |                                                             
 `dependent` param in the association definition macros defines the fate of the association on model destruction.<br>
 Default is `:none`, `:destroy` and `:delete` ensure destruction of association dependents.
 
-### Through Relation
-
-In progress..
-
 ## Indexes
 
 Set secondary indexes with `secondary_index`
@@ -149,14 +145,17 @@ Builds on [active-model's validation](https://github.com/spider-gazelle/active-m
 
 ### `ensure_unique`
 
-Fails to validate if field with duplicate value present in db
+Fails to validate if field with duplicate value present in db.
+If scope is set, the callback/block must accept a tuple with types matching the scope.
 
 Parameter               |                                                         | Default
 ----------------------- | ------------------------------------------------------- | -------
-`field`                 | Model attribute on which to guarantee uniqueness
+`field`                 | Model attribute on which to guarantee uniqueness        |
+`scope`                 | Attributes passed to the transform, defaults to :field  | nil
 `create_index`          | Whether or not to generate a secondary index            | true
 `callback : T -> T`     | Optional function to transform field value              | nil
 `block : T -> T`        | Optional block to transform field value before querying | nil
+
 
 ## Timestamps
 
