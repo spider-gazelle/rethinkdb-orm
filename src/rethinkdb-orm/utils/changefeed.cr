@@ -28,31 +28,23 @@ class RethinkORM::Changefeed(T)
 
   private def parse_changes(result)
     old_val, new_val = {"old_val", "new_val"}.map do |field|
-      val = result[field].raw
-      T.from_trusted_json val.to_json unless val.nil?
+      result[field].raw.try &.to_json
     end
 
     case {old_val, new_val}
     when {nil, _}
-      {value: new_val, event: Event::Created}
+      model = T.from_trusted_json new_val.not_nil!
+      {value: model, event: Event::Created}
     when {_, nil}
-      {value: old_val, event: Event::Deleted}
+      model = T.from_trusted_json old_val.not_nil!
+      {value: model, event: Event::Deleted}
     else
-      updated = apply_changes(old_val, new_val)
-      {value: updated, event: Event::Updated}
-    end
-  end
+      # Create model from old value
+      model = T.from_trusted_json old_val.not_nil!
+      model.clear_changes_information
+      model.assign_attributes_from_trusted_json(new_val.not_nil!)
 
-  private def apply_changes(old_val, new_val)
-    new_attributes = new_val.attributes.reduce({} of String => String) do |attrs, kv|
-      key, value = kv
-      unless value.nil?
-        attrs[key.to_s] = value.to_s
-      end
-      attrs
+      {value: model, event: Event::Updated}
     end
-
-    old_val.assign_attributes(new_attributes)
-    old_val
   end
 end
