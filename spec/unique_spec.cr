@@ -26,8 +26,8 @@ describe RethinkORM::Validators do
     end
 
     it "accepts a transform block for the field" do
-      special_snowflake = Snowflake.create!(personality: "gentle")
-      louder_snowflake = Snowflake.new(personality: "GENTLE")
+      special_snowflake = Snowflake.create!(personality: "GENTLE")
+      louder_snowflake = Snowflake.new(personality: "gentle")
 
       special_snowflake.valid?.should be_true
       louder_snowflake.valid?.should be_false
@@ -36,23 +36,25 @@ describe RethinkORM::Validators do
     end
 
     it "passes scoped fields to transform block" do
-      fresh_flake = Snowflake.create!(vibe: "awful", taste: "great")
-      fresh_flake.taste.should eq "great-awful"
+      fresh_flake = Snowflake.new(vibe: "awful", taste: "GREAT")
+      fresh_flake.taste.should eq "GREAT"
       fresh_flake.valid?.should be_true
-      fresh_flake.taste.should eq "great-awful"
+      fresh_flake.taste.should eq "great"
+      fresh_flake.save!
 
-      less_fresh = Snowflake.new(vibe: "awful", taste: "GREAT")
+      less_fresh = Snowflake.new(vibe: "awful", taste: "great")
       less_fresh.valid?.should be_false
       less_fresh.errors[0].to_s.should eq "Snowflake taste should be unique"
     end
 
     it "passes scoped fields to transform callback" do
-      fresh_flake = Snowflake.create!(vibe: "awful", size: 123)
-      fresh_flake.vibe.should eq "awful-123"
+      fresh_flake = Snowflake.new(vibe: "AWFUL", size: 123)
+      fresh_flake.vibe.should eq "AWFUL"
       fresh_flake.valid?.should be_true
-      fresh_flake.vibe.should eq "awful-123"
+      fresh_flake.vibe.should eq "awful"
+      fresh_flake.save!
 
-      less_fresh = Snowflake.new(vibe: "AWFUL", size: 123)
+      less_fresh = Snowflake.new(vibe: "awful", size: 123)
       less_fresh.valid?.should be_false
       less_fresh.errors[0].to_s.should eq "Snowflake vibe should be unique"
     end

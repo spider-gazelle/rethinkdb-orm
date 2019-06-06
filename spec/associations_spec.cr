@@ -105,8 +105,7 @@ describe RethinkORM::Associations do
     coffee.programmer = programmer
     coffee.save
 
-    found_coffee = Coffee.by_programmer_id(programmer.id).to_a.first?
-    found_coffee.should eq coffee
+    Coffee.by_programmer_id(programmer.id).first.should eq coffee
 
     coffee.destroy
     programmer.destroy

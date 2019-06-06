@@ -143,14 +143,14 @@ class Snowflake < RethinkORM::Base
     personality.downcase
   end
 
-  ensure_unique scope: [:taste, :vibe], field: :taste do |(taste, vibe)|
-    "#{taste.downcase}-#{vibe.downcase}"
+  ensure_unique scope: [:taste, :vibe], field: :taste do |taste, vibe|
+    {taste.downcase, vibe.downcase}
   end
 
   ensure_unique scope: [:vibe, :size], field: :vibe, callback: :dip
 
   def dip(vibe : String, size : Int32)
-    "#{vibe.downcase}-#{size}"
+    {vibe.downcase, size}
   end
 
   def id(value : T) forall T

@@ -4,6 +4,19 @@
 
 Extending [ActiveModel](https://github.com/spider-gazelle/active-model) for attribute definitions, callbacks and validations
 
+- [RethinkDB ORM for Crystal Lang](#rethinkdb-orm-for-crystal-lang)
+  - [Callbacks](#callbacks)
+  - [Associations](#associations)
+    - [`belongs_to`](#belongsto)
+    - [`has_many`](#hasmany)
+    - [`has_one`](#hasone)
+    - [Dependency](#dependency)
+  - [Indexes](#indexes)
+  - [Changefeeds](#changefeeds)
+  - [Validations](#validations)
+    - [`ensure_unique`](#ensureunique)
+  - [Timestamps](#timestamps)
+
 ## Callbacks
 
 Register callbacks for `save`, `update`, `create` and `destroy` by setting the corresponding before/after callback handler.
@@ -146,7 +159,8 @@ Builds on [active-model's validation](https://github.com/spider-gazelle/active-m
 ### `ensure_unique`
 
 Fails to validate if field with duplicate value present in db.
-If scope is set, the callback/block must accept a tuple with types matching the scope.
+If scope is set, the callback/block signature must be a tuple with types matching that of the scope.
+The field(s) are set with the result of the transform block upon successful validation
 
 Parameter               |                                                         | Default
 ----------------------- | ------------------------------------------------------- | -------

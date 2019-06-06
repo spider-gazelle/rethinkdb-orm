@@ -111,7 +111,7 @@ module RethinkORM::Associations
     {% if dependent.id == :destroy || dependent.id == :delete %}
 
     def destroy_{{ method.id }}
-      return unless association = {{ method.id }}
+      return unless (association = {{ method.id }})
       if association.is_a?(RethinkORM::AssociationCollection)
         association.each { |model| model.destroy }
       else
