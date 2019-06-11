@@ -140,7 +140,9 @@ module RethinkORM::Queries
       result.try(&.as_i) || 0
     end
 
-    private def self.table_query
+    # Yield a RethinkDB handle namespaced under the document table
+    #
+    def self.table_query
       Connection.raw do |q|
         yield q.table(@@table_name)
       end
