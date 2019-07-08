@@ -12,12 +12,20 @@ module RethinkORM::Queries
       Collection(self).new(result.each)
     end
 
-    # Establishes a changefeed of models in a rethinkdb table
-    # If no id provided, changes for each document in the table will be iterated
+    # Establishes a changefeed of models in a RethinkDB table
+    #
     def self.changes(id : String? = nil)
-      changes_cursor = id ? table_query { |q| q.get(id).changes }
-                          : table_query { |q| q.changes }
+      # Changefeed at document or table level
+      changes_cursor = table_query { |q| id ? q.get(id).changes : q.changes }
       Changefeed(self).new(changes_cursor)
+    end
+
+    # Establishes a changefeed of raw JSON documents
+    #
+    def self.raw_changes(id : String? = nil)
+      # Changefeed at document or table level
+      changes_cursor = table_query { |q| id ? q.get(id).changes : q.changes }
+      Changefeed::Raw.new(changes_cursor)
     end
 
     # Lookup document by id
