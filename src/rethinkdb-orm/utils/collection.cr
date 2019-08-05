@@ -11,7 +11,7 @@ class RethinkORM::Collection(T)
     if result == Iterator::Stop::INSTANCE
       stop
     else
-      T.from_trusted_json result.raw.to_json
+      T.from_trusted_json result.to_json
     end
   end
 end

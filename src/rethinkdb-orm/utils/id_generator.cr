@@ -11,7 +11,7 @@ class RethinkORM::IdGenerator
 
   # Generate a time-sortable and unique (with high probability) primary key
   def self.next(model)
-    time = Time.now
+    time = Time.utc
     timestamp = (time.to_unix - TIME_OFFSET) * 1_000_000 + time.nanosecond
 
     # Random tail renders it improbable that there will ever be an ID clash amongst nodes

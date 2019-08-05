@@ -6,8 +6,8 @@ require "time"
 #
 module RethinkORM::Timestamps
   macro included
-    attribute created_at : Time = ->{ Time.now }, converter: Time::EpochConverter
-    attribute updated_at : Time = ->{ Time.now }, converter: Time::EpochConverter
+    attribute created_at : Time = ->{ Time.utc }, converter: Time::EpochConverter
+    attribute updated_at : Time = ->{ Time.utc }, converter: Time::EpochConverter
 
     before_create do
       self.created_at = self.updated_at = Time.utc

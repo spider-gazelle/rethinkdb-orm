@@ -8,6 +8,6 @@ describe RethinkORM::Index do
       q.db(SpecHelper::DB_NAME).table("car").index_list
     end
 
-    result.should contain "vin"
+    result.as_a.should contain "vin"
   end
 end

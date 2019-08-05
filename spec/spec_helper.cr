@@ -7,7 +7,7 @@ require "../src/rethinkdb-orm/**"
 require "./spec_models"
 
 module SpecHelper
-  DB_NAME = "test_#{Time.now.to_unix}_#{rand(10000)}"
+  DB_NAME = "test_#{Time.utc.to_unix}_#{rand(10000)}"
 end
 
 RethinkORM::Connection.configure do |settings|
