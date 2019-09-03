@@ -1,3 +1,4 @@
+require "uuid"
 require "./spec_helper"
 
 describe RethinkORM::Queries do
@@ -26,6 +27,17 @@ describe RethinkORM::Queries do
       ids = (correct_documents.compact_map &.id).sort
       found_ids = (BasicModel.find_all(ids).to_a.compact_map &.id).sort
       found_ids.should eq ids
+    end
+
+    it "searches on index" do
+      correct_documents = Array.new(size: 5) do |_|
+        Car.create!(brand: Faker::Name.name, vin: UUID.random.to_s)
+      end
+      vin = (correct_documents.compact_map &.vin).sort.first
+      found_vins = (Car.find_all([vin], index: :vin).to_a.compact_map &.vin).sort
+
+      found_vins.size.should eq 1
+      found_vins.first.should eq vin
     end
 
     it "ignores missing ids" do
