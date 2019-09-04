@@ -18,3 +18,5 @@ development_dependencies:
     github: veelenga/ameba
   faker:
     github: askn/faker
+
+license: MIT
