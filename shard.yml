@@ -7,9 +7,10 @@ authors:
 dependencies:
   active-model:
     github: spider-gazelle/active-model
-    branch: master
+    version: 1.6.0
   crystal-rethinkdb:
     github: kingsleyh/crystal-rethinkdb
+    version: 0.1.8
   habitat:
     github: luckyframework/habitat
 
