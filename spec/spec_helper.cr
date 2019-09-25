@@ -7,7 +7,9 @@ require "../src/rethinkdb-orm/**"
 require "./spec_models"
 
 module SpecHelper
-  DB_NAME = "test_#{Time.utc.to_unix}_#{rand(10000)}"
+  # FIXME: when a proper at exit handler is added to specs
+  # DB_NAME = "test_#{Time.utc.to_unix}_#{rand(10000)}"
+  DB_NAME = "test"
 end
 
 RethinkORM::Connection.configure do |settings|
@@ -15,8 +17,8 @@ RethinkORM::Connection.configure do |settings|
 end
 
 # Tear down the test database
-at_exit do
-  RethinkORM::Connection.raw do |q|
-    q.db_drop(SpecHelper::DB_NAME)
-  end
-end
+# at_exit do
+#   RethinkORM::Connection.raw do |q|
+#     q.db_drop(SpecHelper::DB_NAME)
+#   end
+# end
