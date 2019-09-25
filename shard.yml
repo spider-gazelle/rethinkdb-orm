@@ -16,7 +16,8 @@ dependencies:
 
 development_dependencies:
   ameba:
-    github: veelenga/ameba
+    github: crystal-ameba/ameba
+    version: ~> 0.10.1
   faker:
     github: askn/faker
 
