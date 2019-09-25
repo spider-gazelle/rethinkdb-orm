@@ -1,7 +1,12 @@
 sudo: required
 language: crystal
-addons:
-  rethinkdb: '2.3'
+
+services:
+  - docker
+before_install:
+    # Add rethinkdb 2.3.6
+  - docker run --net="host" -p29015:29015 -p28015:28015 -d acalabs/rethinkdb:2.3.6
+
 install:
   - shards install
 script:
