@@ -9,8 +9,8 @@ dependencies:
     github: spider-gazelle/active-model
     version: 1.6.0
   crystal-rethinkdb:
-    github: kingsleyh/crystal-rethinkdb
-    version: 0.1.8
+    github: caspiano/crystal-rethinkdb
+    branch: develop
   habitat:
     github: luckyframework/habitat
 
