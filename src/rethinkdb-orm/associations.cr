@@ -20,9 +20,9 @@ module RethinkORM::Associations
     def {{ parent_name.id }} : {{ parent_class }}?
       parent = self.{{ assoc_var.id }}
       return parent unless parent.nil?
+      return nil unless self.{{ foreign_key.id }}
 
-      self.{{ assoc_var.id }} = self.{{ foreign_key.id }} ? {{ parent_class }}.find(self.{{ foreign_key.id }})
-                                                          : {{ parent_class }}.new
+      self.{{ assoc_var.id }} = {{ parent_class }}.find(self.{{ foreign_key.id }})
     end
 
     def {{ parent_name.id }}! : {{ parent_class }}
