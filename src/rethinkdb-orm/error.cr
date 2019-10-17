@@ -17,6 +17,15 @@ class RethinkORM::Error < Exception
     def initialize(@model : RethinkORM::Base, message)
       super(message)
     end
+
+    def inspect_errors
+      @model.errors.map do |e|
+        {
+          field:   e.field,
+          message: e.message,
+        }
+      end
+    end
   end
 
   class DocumentNotSaved < Error
