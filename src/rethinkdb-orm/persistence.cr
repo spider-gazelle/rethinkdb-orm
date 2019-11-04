@@ -20,7 +20,11 @@ module RethinkORM::Persistence
     !(new_record? || destroyed?)
   end
 
-  getter? destroyed = false
+  property destroyed = false
+
+  def destroyed?
+    destroyed
+  end
 
   macro included
 

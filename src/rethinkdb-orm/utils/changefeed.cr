@@ -38,6 +38,7 @@ class RethinkORM::Changefeed(T)
       {value: model, event: Event::Created}
     when {_, nil}
       model = T.from_trusted_json old_val.as(String)
+      model.destroyed = true
       {value: model, event: Event::Deleted}
     else
       # Create model from old value
