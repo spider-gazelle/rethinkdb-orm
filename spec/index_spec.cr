@@ -5,7 +5,7 @@ describe RethinkORM::Index do
     Car.create!(brand: "Lotus", vin: "YX-Y242069")
 
     result = RethinkORM::Connection.raw do |q|
-      q.db(SpecHelper::DB_NAME).table("car").index_list
+      q.db(DB_NAME).table("car").index_list
     end
 
     result.as_a.should contain "vin"
