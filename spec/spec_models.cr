@@ -82,7 +82,7 @@ end
 
 class Wheel < RethinkORM::Base
   attribute width : Int32
-  belongs_to Car
+  belongs_to Car, foreign_key: :car_id
 end
 
 class Programmer < RethinkORM::Base

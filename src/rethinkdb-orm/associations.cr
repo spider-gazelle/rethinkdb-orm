@@ -2,11 +2,11 @@ require "./utils/association_collection"
 
 module RethinkORM::Associations
   # Defines getter and setter for parent relationship
-  macro belongs_to(parent_class, dependent = :none, create_index = true, association_name = nil)
+  macro belongs_to(parent_class, dependent = :none, create_index = true, association_name = nil, foreign_key = nil)
     {% parent_name = association_name || parent_class.id.stringify.underscore.downcase.gsub(/::/, "_") %}
-    {% foreign_key = parent_name.id + "_id" %}
-    {% assoc_var = "__#{parent_name.id}".id %}
+    {% foreign_key = (foreign_key || "#{parent_name.id}_id").id %}
     {% association_method = parent_name.id.symbolize %}
+    {% assoc_var = "__#{parent_name.id}".id %}
 
     attribute {{ foreign_key.id }} : String, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
     property {{ assoc_var }} : {{ parent_class }}?
