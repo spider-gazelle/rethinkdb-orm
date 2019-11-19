@@ -138,4 +138,18 @@ describe RethinkORM::Associations do
     child.parent.should eq nil
     child.destroy
   end
+
+  describe "association names" do
+    it "#has_one" do
+      orchard = Orchard.new
+      orchard.froot.should be_nil
+      orchard.froot_id.should be_nil
+    end
+
+    it "#belongs_to" do
+      fruit = Fruit.new
+      fruit.orchy.should be_nil
+      fruit.orchy_id.should be_nil
+    end
+  end
 end

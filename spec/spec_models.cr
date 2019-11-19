@@ -62,6 +62,16 @@ end
 
 # Association Models
 
+class Fruit < RethinkORM::Base
+  attribute type : String
+  belongs_to Orchard, association_name: :orchy
+end
+
+class Orchard < RethinkORM::Base
+  attribute name : String
+  has_one Fruit, association_name: :froot
+end
+
 class Car < RethinkORM::Base
   attribute brand : String
   attribute vin : String

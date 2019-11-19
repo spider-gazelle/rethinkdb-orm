@@ -2,10 +2,10 @@ require "./utils/association_collection"
 
 module RethinkORM::Associations
   # Defines getter and setter for parent relationship
-  macro belongs_to(parent_class, dependent = :none, create_index = true)
-    {% parent_name = parent_class.id.stringify.underscore.downcase.gsub(/::/, "_") %}
-    {% foreign_key = parent_name + "_id" %}
-    {% assoc_var = ("__" + parent_name).id %}
+  macro belongs_to(parent_class, dependent = :none, create_index = true, association_name = nil)
+    {% parent_name = association_name || parent_class.id.stringify.underscore.downcase.gsub(/::/, "_") %}
+    {% foreign_key = parent_name.id + "_id" %}
+    {% assoc_var = "__#{parent_name.id}".id %}
     {% association_method = parent_name.id.symbolize %}
 
     attribute {{ foreign_key.id }} : String, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
@@ -53,9 +53,9 @@ module RethinkORM::Associations
     end
   end
 
-  macro has_one(child_class, dependent = :none, create_index = false)
-    {% child = child_class.id.underscore.downcase.gsub(/::/, "_") %}
-    {% assoc_var = ("__" + child.id.stringify).id %}
+  macro has_one(child_class, dependent = :none, create_index = false, association_name = nil)
+    {% child = association_name || child_class.id.underscore.downcase.gsub(/::/, "_") %}
+    {% assoc_var = "__#{child.id}".id %}
     {% foreign_key = child + "_id" %}
     {% association_method = child.id.symbolize %}
 
