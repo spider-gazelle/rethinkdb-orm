@@ -16,8 +16,7 @@ class RethinkORM::AssociationCollection(Owner, Target)
   end
 
   def where(**attrs)
-    attrs = attrs.merge({"#{foreign_key}" => owner.id})
-    Target.where(**attrs)
+    Target.where(attrs.to_h.merge({"#{foreign_key}" => owner.id}))
   end
 
   def find(value)
