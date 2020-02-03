@@ -12,7 +12,8 @@ module RethinkORM::Persistence
     if destroyed?
       false
     else
-      @id.nil?
+      id_local = @id
+      id_local.nil? || id_local.empty?
     end
   end
 
@@ -208,7 +209,8 @@ module RethinkORM::Persistence
       run_save_callbacks do
         # TODO: Allow user to tag an attribute as primary key.
         #       Requires either changing default primary key or using secondary index
-        @id ||= @@uuid_generator.next(self)
+        id_local = @id
+        @id = @@uuid_generator.next(self) if id_local.nil? || id_local.empty?
 
         response = Connection.raw_json(self.to_json) do |q, doc|
           q.table(@@table_name).insert(doc, **options)
