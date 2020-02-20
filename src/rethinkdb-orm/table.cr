@@ -1,7 +1,4 @@
 module RethinkORM::Table
-  # Silence compiler, table_name set by macro
-  @@table_name : String = ""
-
   macro included
     macro inherited
       TABLE_NAME = {} of Symbol => String
