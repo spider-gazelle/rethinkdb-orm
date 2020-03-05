@@ -22,6 +22,8 @@ module RethinkORM
       base.update(name: "stimpy")
       coordination.receive
       changes.should eq [{:name => "stimpy"}]
+
+      changefeed.stop
     end
 
     it "should iterate changes on a table" do
@@ -30,10 +32,11 @@ module RethinkORM
 
       names = [] of String | Nil
       events = [] of RethinkORM::Changefeed::Event
+
       spawn do
         changefeed.each.with_index do |change, index|
           case index
-          when 0, 1, 2
+          when 0, 1, 2, 4, 5
             events << change[:event]
             names << change[:value].name
           when 3
@@ -44,11 +47,17 @@ module RethinkORM
         end
       end
 
+      Fiber.yield
+
       BasicModel.create!(name: "ren")
       BasicModel.create!(name: "stimpy")
       horse = BasicModel.create!(name: "mr. horse")
       horse.destroy
+
       finished_channel.receive
+      changefeed.stop
+
+      BasicModel.create!(name: "bubbles")
 
       names.should eq ["ren", "stimpy", "mr. horse"]
       events.should eq ([
@@ -96,13 +105,12 @@ module RethinkORM
         spawn do
           changefeed.each.with_index do |change, index|
             case index
-            when 0, 1, 2
+            when 0, 1, 2, 4, 5
               events << change[:event]
               documents << JSON.parse(change[:value]).as_h
             when 3
               events << change[:event]
               finished_channel.send nil
-              break
             end
           end
         end
@@ -112,6 +120,9 @@ module RethinkORM
         third = BasicModel.create!(name: "mr. horse")
         third.destroy
         finished_channel.receive
+        changefeed.stop
+        second.destroy
+        third.destroy
 
         documents.should eq [first, second, third].map { |model| JSON.parse(model.to_json).as_h }
         events.should eq ([

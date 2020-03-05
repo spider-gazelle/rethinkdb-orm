@@ -1,17 +1,28 @@
-class RethinkORM::Collection(T)
-  include Iterator(T)
-  include Iterator::IteratorWrapper
+require "crystal-rethinkdb"
 
-  def initialize(@iterator : Iterator(RethinkDB::QueryResult))
-  end
+module RethinkORM
+  class Collection(T)
+    include Iterator(T)
+    include Iterator::IteratorWrapper
 
-  def next
-    result = wrapped_next
+    def initialize(
+      @iterator : Iterator(RethinkDB::QueryResult)
+    )
+    end
 
-    if result == Iterator::Stop::INSTANCE
-      stop
-    else
-      T.from_trusted_json result.to_json
+    def next
+      result = wrapped_next
+
+      if result == Iterator::Stop::INSTANCE
+        stop
+      else
+        T.from_trusted_json result.to_json
+      end
+    end
+
+    def stop
+      @iterator.stop
+      super
     end
   end
 end
