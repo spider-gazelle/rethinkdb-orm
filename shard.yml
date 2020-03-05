@@ -1,5 +1,5 @@
 name: rethinkdb-orm
-version: 2.4.3
+version: 2.4.4
 
 authors:
   - Caspian Baska <caspianbaska@gmail.com>
@@ -9,8 +9,8 @@ dependencies:
     github: spider-gazelle/active-model
     version: ~> 1.8.2
   crystal-rethinkdb:
-    github: kingsleyh/crystal-rethinkdb
-    version: 0.1.10
+    github: aca-labs/crystal-rethinkdb
+    branch: threadsafe
   habitat:
     github: luckyframework/habitat
 

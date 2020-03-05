@@ -17,15 +17,13 @@ class RethinkORM::Connection
   @@resource_lock = Mutex.new
 
   def self.db
-    opts = {
+    @@db ||= RethinkDB::Connection.new(
       host:     settings.host,
       port:     settings.port,
       db:       settings.db,
       user:     settings.user,
       password: settings.password,
-    }
-
-    @@db ||= RethinkDB::Connection.new(opts)
+    )
   end
 
   # Passes the query builder to the block.
