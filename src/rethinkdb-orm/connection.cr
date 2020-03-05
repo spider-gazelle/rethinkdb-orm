@@ -11,6 +11,8 @@ class RethinkORM::Connection
     setting db : String = ENV["RETHINKDB_DB"]? || ENV["RETHINKDB_DATABASE"]? || "test"
     setting user : String = ENV["RETHINKDB_USER"]? || "admin"
     setting password : String = ENV["RETHINKDB_PASSWORD"]? || ""
+    setting retry_interval : Time::Span = (ENV["RETHINKDB_TIMEOUT"]? || 2).to_i.seconds
+    setting retry_attempts : Int32? = ENV["RETHINKDB_RETRIES"]?.try &.to_i
   end
 
   @@resource_check = false
@@ -18,11 +20,13 @@ class RethinkORM::Connection
 
   def self.db
     @@db ||= RethinkDB::Connection.new(
-      host:     settings.host,
-      port:     settings.port,
-      db:       settings.db,
-      user:     settings.user,
+      host: settings.host,
+      port: settings.port,
+      db: settings.db,
+      user: settings.user,
       password: settings.password,
+      max_retry_interval: settings.retry_interval,
+      max_retry_attempts: settings.retry_attempts,
     )
   end
 
@@ -34,13 +38,13 @@ class RethinkORM::Connection
     ensure_resources!
 
     query = yield r
-    query.run(self.db)
+    query.run(db)
   end
 
   # Passes query builder and datum term of supplied raw json string
   #
   def self.raw_json(json : String)
-    self.raw do |q|
+    raw do |q|
       yield q, q.json(json)
     end
   end
@@ -94,8 +98,10 @@ class RethinkORM::Connection
         r.db(settings.db).table(index[:table]).index_wait(index[:field])
       end
 
+      resource_creation_expression = [db_check] + table_queries + index_creation + index_existence
+
       # Combine into series of sequentially evaluated expressions
-      r.expr([db_check] + table_queries + index_creation + index_existence).run(self.db)
+      r.expr(resource_creation_expression).run(db)
 
       # TODO: Error check
       @@resource_check = true
