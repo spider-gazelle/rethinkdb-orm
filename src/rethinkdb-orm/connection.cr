@@ -17,17 +17,31 @@ class RethinkORM::Connection
 
   @@resource_check = false
   @@resource_lock = Mutex.new
+  @@db : RethinkDB::Connection? = nil
 
   def self.db
-    @@db ||= RethinkDB::Connection.new(
-      host: settings.host,
-      port: settings.port,
-      db: settings.db,
-      user: settings.user,
-      password: settings.password,
-      max_retry_interval: settings.retry_interval,
-      max_retry_attempts: settings.retry_attempts,
-    )
+    @@db.as(RethinkDB::Connection) unless @@db.nil?
+
+    @@resource_lock.synchronize {
+      if @@resource_check && @@db
+        @@db.as(RethinkDB::Connection)
+      else
+        connection = RethinkDB::Connection.new(
+          host: settings.host,
+          port: settings.port,
+          db: settings.db,
+          user: settings.user,
+          password: settings.password,
+          max_retry_interval: settings.retry_interval,
+          max_retry_attempts: settings.retry_attempts,
+        )
+
+        ensure_resources!(connection)
+        @@db = connection
+
+        connection
+      end
+    }
   end
 
   # Passes the query builder to the block.
@@ -35,8 +49,6 @@ class RethinkORM::Connection
   # Auto creates the database if its not already present.
   # The block defined query is run and raw results returned.
   def self.raw
-    ensure_resources!
-
     query = yield r
     query.run(db)
   end
@@ -52,38 +64,29 @@ class RethinkORM::Connection
   # Lazily check for and create non-existant resources in rethink
   #
   # TODO: support more configuration for db/table sharding and replication
-  protected def self.ensure_resources!
-    @@resource_lock.synchronize {
-      return if @@resource_check
+  protected def self.ensure_resources!(connection)
+    return if @@resource_check
 
-      tables = RethinkORM::Base::TABLES.uniq
-      indices = RethinkORM::Base::INDICES.uniq
+    tables = RethinkORM::Base::TABLES.uniq
+    indices = RethinkORM::Base::INDICES.uniq
 
-      db_check = r.branch(
-        # If db present
-        r.db_list.contains(settings.db),
-        # Then noop
-        {"dbs_created" => 0},
-        # Else create db
-        r.db_create(settings.db),
-      )
+    db_check = r.branch(
+      # If db present
+      r.db_list.contains(settings.db),
+      # Then noop
+      {"dbs_created" => 0},
+      # Else create db
+      r.db_create(settings.db),
+    )
 
-      table_queries = tables.map do |table|
-        r.branch(
-          # If table present
-          r.db(settings.db).table_list.contains(table),
-          # Then noop
-          {"tables_created" => 0},
-          # Else create table
-          r.db(settings.db).table_create(table)
-        )
-      end
-
-      index_creation = indices.map do |index|
+    # Group index queries by table
+    index_queries = indices.group_by { |index| index[:table] }.transform_values do |queries|
+      queries.map do |index|
         table = index[:table]
         field = index[:field]
 
-        r.branch(
+        # Create index or noop
+        creation = r.branch(
           # If index present
           r.db(settings.db).table(table).index_list.contains(field),
           # Then noop
@@ -91,20 +94,43 @@ class RethinkORM::Connection
           # Else create index
           r.db(settings.db).table(table).index_create(field)
         )
+        # Wait for index to be ready
+        existence = r.db(settings.db).table(index[:table]).index_wait(index[:field])
+
+        {creation, existence}
       end
+    end
 
-      # Block until the table has been created
-      index_existence = indices.map do |index|
-        r.db(settings.db).table(index[:table]).index_wait(index[:field])
-      end
+    # Combine table and index queries
+    table_queries = tables.map do |table|
+      creation_query = r.branch(
+        # If table present
+        r.db(settings.db).table_list.contains(table),
+        # Then noop
+        {"tables_created" => 0},
+        # Else create table
+        r.db(settings.db).table_create(table)
+      )
+      {creation_query, index_queries[table]?}
+    end
 
-      resource_creation_expression = [db_check] + table_queries + index_creation + index_existence
+    # create DB
+    db_check.run(connection)
 
-      # Combine into series of sequentially evaluated expressions
-      r.expr(resource_creation_expression).run(db)
+    # create tables and indexes
+    table_queries = table_queries.map do |table_creation, index_creation|
+      future {
+        table_creation.run(connection)
+        index_creation.try &.map do |create, wait|
+          create.run(connection)
+          future { wait.run(connection) }
+        end.each(&.get)
+      }
+    end
 
-      # TODO: Error check
-      @@resource_check = true
-    }
+    table_queries.each &.get
+
+    # TODO: Error check
+    @@resource_check = true
   end
 end
