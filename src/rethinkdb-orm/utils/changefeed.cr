@@ -1,14 +1,23 @@
 require "crystal-rethinkdb"
 
-require "./collection"
-
 module RethinkORM
   # Wraps the Changefeed iterator and parses events
-  class Changefeed(T) < Collection(T)
+  class Changefeed(T)
+    include Iterator(T)
+    include Iterator::IteratorWrapper
+
     enum Event
       Created
       Updated
       Deleted
+    end
+
+    def initialize(@iterator : Iterator(RethinkDB::QueryResult))
+    end
+
+    def stop
+      @iterator.stop
+      super
     end
 
     def next
