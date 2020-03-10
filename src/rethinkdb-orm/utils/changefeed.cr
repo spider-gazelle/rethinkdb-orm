@@ -1,4 +1,4 @@
-require "crystal-rethinkdb"
+require "rethinkdb"
 
 module RethinkORM
   # Wraps the Changefeed iterator and parses events

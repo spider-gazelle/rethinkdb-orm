@@ -1,4 +1,4 @@
-require "crystal-rethinkdb"
+require "rethinkdb"
 
 require "./connection"
 require "./utils/id_generator"

@@ -1,6 +1,6 @@
-require "crystal-rethinkdb"
 require "habitat"
 require "mutex"
+require "rethinkdb"
 
 include RethinkDB::Shortcuts
 

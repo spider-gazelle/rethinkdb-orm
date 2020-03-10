@@ -1,13 +1,11 @@
-require "crystal-rethinkdb"
+require "rethinkdb"
 
 module RethinkORM
   class Collection(T)
     include Iterator(T)
     include Iterator::IteratorWrapper
 
-    def initialize(
-      @iterator : Iterator(RethinkDB::QueryResult)
-    )
+    def initialize(@iterator : Iterator(RethinkDB::QueryResult))
     end
 
     def next
