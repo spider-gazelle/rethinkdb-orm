@@ -7,13 +7,15 @@ module RethinkORM::Persistence
   # Flag to allow lazy querying of table status
   @@table_created = false
 
+  protected property _new_flag = false
+
   # Id generated on save or set on load
   def new_record?
     if destroyed?
       false
     else
       id_local = @id
-      id_local.nil? || id_local.empty?
+      _new_flag || id_local.nil? || id_local.try &.empty?
     end
   end
 
@@ -194,7 +196,8 @@ module RethinkORM::Persistence
         replaced = response["replaced"]?.try(&.as_i?) || 0
         updated = response["updated"]?.try(&.as_i?) || 0
         unchanged = response["unchanged"]?.try(&.as_i?) || 0
-        success = replaced > 0 || updated > 0 || unchanged > 0
+        created = response["created"]?.try(&.as_i?) || 0
+        success = replaced > 0 || created > 0 || updated > 0 || unchanged == 1
 
         clear_changes_information if success
         success
