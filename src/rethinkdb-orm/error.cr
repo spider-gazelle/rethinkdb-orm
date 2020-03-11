@@ -33,4 +33,22 @@ class RethinkORM::Error < Exception
 
   class DatabaseError < Error
   end
+
+  class LockInvalidOp < Error
+    def initialize(key : String, locked : Bool)
+      super("Lock (#{key}) #{locked ? "already" : "not"} locked")
+    end
+  end
+
+  class LockLost < Error
+    def initialize(key : String)
+      super("Lock (#{key}) lost ")
+    end
+  end
+
+  class LockUnavailable < Error
+    def initialize(key : String)
+      super("Lock (#{key}) unavailable")
+    end
+  end
 end
