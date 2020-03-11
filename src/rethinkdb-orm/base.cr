@@ -34,7 +34,7 @@ abstract class RethinkORM::Base < ActiveModel::Model
   end
 
   # Default primary key
-  attribute id : String, es_type: "keyword"
+  attribute id : String, es_type: "keyword", mass_assignment: false
 
   def_equals attributes, changed_attributes
 end
