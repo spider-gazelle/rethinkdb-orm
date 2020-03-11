@@ -11,14 +11,20 @@ class RethinkORM::IdGenerator
 
   # Generate a time-sortable and unique (with high probability) primary key
   def self.next(model)
+    "#{model.table_name}-#{postfix}"
+  end
+
+  def self.next(table_name : String)
+    "#{table_name}-#{postfix}"
+  end
+
+  def self.postfix
     time = Time.utc
     timestamp = (time.to_unix - TIME_OFFSET) * 1_000_000 + time.nanosecond
 
     # Random tail renders it improbable that there will ever be an ID clash amongst nodes
     random_tail = (Random.rand(99_999) + 1).to_s.rjust(5, '0')
-    postfix = base_encode("#{timestamp}#{random_tail}", BASE_65)
-
-    "#{model.table_name}-#{postfix}"
+    base_encode("#{timestamp}#{random_tail}", BASE_65)
   end
 
   # Converts a string of base10 digits to string in arbitrary base
