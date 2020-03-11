@@ -222,6 +222,7 @@ module RethinkORM::Persistence
         success = (response["inserted"]?.try(&.as_i?) || 0) > 0
 
         clear_changes_information if success
+
         success
       end
     end

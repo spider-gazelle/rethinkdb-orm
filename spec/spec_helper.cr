@@ -8,7 +8,7 @@ require "./spec_models"
 
 DB_NAME = "test_#{Time.utc.to_unix}_#{rand(10000)}"
 
-RethinkORM::Connection.configure do |settings|
+RethinkORM.configure do |settings|
   settings.db = DB_NAME
 end
 

@@ -43,7 +43,7 @@ module RethinkORM::Queries
     # Creates a Changefeed::Raw on query
     #
     def self.raw_changes(& : RethinkDB::Table -> HasChanges)
-      cursor = connection.table_query do |q|
+      cursor = table_query do |q|
         query = yield q
         query.changes
       end

@@ -1,5 +1,7 @@
 name: rethinkdb-orm
 version: 2.5.3
+crystal: 0.33.0
+license: MIT
 
 authors:
   - Caspian Baska <caspianbaska@gmail.com>
@@ -20,5 +22,3 @@ development_dependencies:
     version: ~> 0.10.1
   faker:
     github: askn/faker
-
-license: MIT
