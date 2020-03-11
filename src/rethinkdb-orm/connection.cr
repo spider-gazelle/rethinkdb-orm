@@ -7,7 +7,8 @@ require "./settings"
 module RethinkORM
   class Connection
     extend Settings
-    include RethinkDB::Shortcuts
+
+    private alias R = RethinkDB
 
     @@resource_check = false
     @@resource_lock = Mutex.new
@@ -43,7 +44,7 @@ module RethinkORM
     # Auto creates the database if its not already present.
     # The block defined query is run and raw results returned.
     def self.raw
-      query = yield r
+      query = yield R
       query.run(self.db)
     end
 
@@ -64,13 +65,13 @@ module RethinkORM
       tables = RethinkORM::Base::TABLES.uniq
       indices = RethinkORM::Base::INDICES.uniq
 
-      db_check = r.branch(
+      db_check = R.branch(
         # If db present
-        r.db_list.contains(settings.db),
+        R.db_list.contains(settings.db),
         # Then noop
         {"dbs_created" => 0},
         # Else create db
-        r.db_create(settings.db),
+        R.db_create(settings.db),
       )
 
       # Group index queries by table
@@ -80,16 +81,16 @@ module RethinkORM
           field = index[:field]
 
           # Create index or noop
-          creation = r.branch(
+          creation = R.branch(
             # If index present
-            r.db(settings.db).table(table).index_list.contains(field),
+            R.db(settings.db).table(table).index_list.contains(field),
             # Then noop
             {"created" => 0},
             # Else create index
-            r.db(settings.db).table(table).index_create(field),
+            R.db(settings.db).table(table).index_create(field),
           )
           # Wait for index to be ready
-          existence = r.db(settings.db).table(table).index_wait(field)
+          existence = R.db(settings.db).table(table).index_wait(field)
 
           {creation, existence}
         end
@@ -97,13 +98,13 @@ module RethinkORM
 
       # Combine table and index queries
       table_queries = tables.map do |table|
-        creation_query = r.branch(
+        creation_query = R.branch(
           # If table present
-          r.db(settings.db).table_list.contains(table),
+          R.db(settings.db).table_list.contains(table),
           # Then noop
           {"tables_created" => 0},
           # Else create table
-          r.db(settings.db).table_create(table)
+          R.db(settings.db).table_create(table)
         )
         {creation_query, index_queries[table]?}
       end
