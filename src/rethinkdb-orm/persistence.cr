@@ -59,7 +59,7 @@ module RethinkORM::Persistence
     # Removes all records from the table
     #
     def self.clear
-      Connection.raw do |q|
+      Connection.raw(self.__connection) do |q|
         q.table(@@table_name).delete
       end
     end
@@ -117,7 +117,7 @@ module RethinkORM::Persistence
     assign_attributes(**attributes)
     update_body = subset_json(attributes.keys)
 
-    response = Connection.raw_json(update_body) do |q, doc|
+    response = Connection.raw_json(update_body, {{@type}}.__connection) do |q, doc|
       q.table(@@table_name)
         .get(@id)
         .update(doc)
@@ -185,7 +185,7 @@ module RethinkORM::Persistence
 
     run_update_callbacks do
       run_save_callbacks do
-        response = Connection.raw_json(self.to_json) do |q, doc|
+        response = Connection.raw_json(self.to_json, {{@type}}.__connection) do |q, doc|
           q.table(@@table_name)
             .get(@id)
             .update(doc, **options)
@@ -215,7 +215,7 @@ module RethinkORM::Persistence
         id_local = @id
         @id = @@uuid_generator.next(self) if id_local.nil? || id_local.empty?
 
-        response = Connection.raw_json(self.to_json) do |q, doc|
+        response = Connection.raw_json(self.to_json, {{@type}}.__connection) do |q, doc|
           q.table(@@table_name).insert(doc, **options)
         end
 
@@ -234,7 +234,7 @@ module RethinkORM::Persistence
   # Delete document in table, update model metadata
   #
   protected def __delete
-    response = Connection.raw do |q|
+    response = Connection.raw({{@type}}.__connection) do |q|
       q.table(@@table_name)
         .get(@id)
         .delete

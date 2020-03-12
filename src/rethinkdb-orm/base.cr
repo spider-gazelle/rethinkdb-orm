@@ -1,17 +1,16 @@
 require "active-model"
 
 require "./associations"
-require "./connection"
+require "./error"
 require "./index"
 require "./persistence"
 require "./queries"
 require "./table"
 require "./timestamps"
-require "./error"
-
 require "./validators/*"
+require "./connection"
 
-abstract class RethinkORM::Base < ActiveModel::Model
+class RethinkORM::Base < ActiveModel::Model
   include ActiveModel::Validation
   include ActiveModel::Callbacks
 
@@ -22,16 +21,20 @@ abstract class RethinkORM::Base < ActiveModel::Model
   include Table
   include Validators
 
+  # Allows setting of connection for a specific model.
+  # Used during the table initialisation, so only the Lock has a connection
+  protected class_property __connection : RethinkDB::Connection? = nil
+
   TABLES  = [] of String
   INDICES = [] of NamedTuple(field: String, table: String)
 
   macro inherited
-    macro finished
-      {% unless @type.abstract? %}
-      __process_table__
-      {% end %}
+      macro finished
+        {% unless @type.abstract? %}
+        __process_table__
+        {% end %}
+      end
     end
-  end
 
   # Default primary key
   attribute id : String, es_type: "keyword", mass_assignment: false

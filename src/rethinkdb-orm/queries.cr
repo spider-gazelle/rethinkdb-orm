@@ -8,7 +8,7 @@ module RethinkORM::Queries
   macro included
     # Cursor of each model in the database
     def self.all
-      cursor = Connection.raw do |q|
+      cursor = Connection.raw(__connection) do |q|
         q.table(@@table_name)
       end
       Collection(self).new(cursor)
@@ -126,7 +126,7 @@ module RethinkORM::Queries
     #
     # Should raise/not compile on malformed query/incorrect return type to create a collection
     def self.raw_query
-      cursor = Connection.raw do |q|
+      cursor = Connection.raw(__connection) do |q|
         yield q
       end
       Collection(self).new(cursor)
@@ -173,7 +173,7 @@ module RethinkORM::Queries
     # Yield a RethinkDB handle namespaced under the document table
     #
     def self.table_query
-      Connection.raw do |q|
+      Connection.raw(__connection) do |q|
         yield q.table(@@table_name)
       end
     end
