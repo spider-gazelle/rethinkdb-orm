@@ -65,57 +65,31 @@ module RethinkORM
       tables = RethinkORM::Base::TABLES.uniq
       indices = RethinkORM::Base::INDICES.uniq
 
-      db_check = R.branch(
-        # If db present
-        R.db_list.contains(settings.db),
-        # Then noop
-        {"dbs_created" => 0},
-        # Else create db
-        R.db_create(settings.db),
-      )
+      # Generate db creation query
+      db_check = create_database_query
 
-      # Group index queries by table
-      index_queries = indices.group_by { |index| index[:table] }.transform_values do |queries|
-        queries.map do |index|
-          table = index[:table]
-          field = index[:field]
-
-          # Create index or noop
-          creation = R.branch(
-            # If index present
-            R.db(settings.db).table(table).index_list.contains(field),
-            # Then noop
-            {"created" => 0},
-            # Else create index
-            R.db(settings.db).table(table).index_create(field),
-          )
-          # Wait for index to be ready
-          existence = R.db(settings.db).table(table).index_wait(field)
-
-          {creation, existence}
-        end
-      end
+      # Generate index creation query
+      index_queries = create_index_queries(indices)
 
       # Combine table and index queries
       table_queries = tables.map do |table|
-        creation_query = R.branch(
-          # If table present
-          R.db(settings.db).table_list.contains(table),
-          # Then noop
-          {"tables_created" => 0},
-          # Else create table
-          R.db(settings.db).table_create(table)
-        )
-        {creation_query, index_queries[table]?}
+        {table, create_table_query(table), index_queries[table]?}
       end
 
-      # create DB
+      # Create DB
       db_check.run(connection)
 
-      # create tables and indexes
-      table_queries = table_queries.map do |table_creation, index_creation|
+      # Create tables and indexes
+      table_queries = table_queries.map do |table, table_creation, index_creation|
         future {
-          table_creation.run(connection)
+          begin
+            table_creation.run(connection)
+          rescue e : RethinkDB::ReqlOpFailedError
+            raise e unless e.message.try &.includes?("already exists")
+          end
+
+          fix_duplicate_table_query(table).run(connection)
+
           index_creation.try &.map do |create, wait|
             create.run(connection)
             future { wait.run(connection) }
@@ -127,6 +101,65 @@ module RethinkORM
 
       # TODO: Error check
       @@resource_check = true
+    end
+
+    # Generate a DB creation query
+    #
+    protected def self.create_database_query(database = settings.db)
+      R.branch(
+        # If database present
+        R.db_list.contains(database),
+        # Then noop
+        {"dbs_created" => 0},
+        # Else create db
+        R.db_create(database),
+      )
+    end
+
+    # Generate a mapping { table => [{index_creation_query, index_existence_query}] }
+    #
+    protected def self.create_index_queries(indices, database = settings.db)
+      # Group index queries by table
+      indices.group_by { |index| index[:table] }.transform_values do |queries|
+        queries.map do |index|
+          table = index[:table]
+          field = index[:field]
+
+          # Create index or noop
+          creation = R.branch(
+            # If index present
+            R.db(database).table(table).index_list.contains(field),
+            # Then noop
+            {"created" => 0},
+            # Else create index
+            R.db(database).table(table).index_create(field),
+          )
+          # Wait for index to be ready
+          existence = R.db(database).table(table).index_wait(field)
+
+          {creation, existence}
+        end
+      end
+    end
+
+    # Genereate a table creation query
+    #
+    protected def self.create_table_query(table, database = settings.db)
+      R
+        .db(database)
+        .table_create(table)
+    end
+
+    # Remove duplicates of a table from RethinkDB system table
+    # NOTE: Necessary as multiple writers can cause duplicate tables
+    protected def self.fix_duplicate_table_query(table, database = settings.db)
+      R
+        .db("rethinkdb")
+        .table("table_config")
+        .filter({db: database, name: table})
+        .order_by("id")
+        .slice(1)
+        .delete
     end
   end
 end
