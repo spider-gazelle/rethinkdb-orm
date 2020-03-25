@@ -9,7 +9,7 @@ module RethinkORM::Queries
     # Cursor of each model in the database
     def self.all
       cursor = Connection.raw do |q|
-        q.table(@@table_name)
+        q.table(table_name)
       end
       Collection(self).new(cursor)
     end
@@ -174,7 +174,7 @@ module RethinkORM::Queries
     #
     def self.table_query
       Connection.raw do |q|
-        yield q.table(@@table_name)
+        yield q.table(table_name)
       end
     end
   end
