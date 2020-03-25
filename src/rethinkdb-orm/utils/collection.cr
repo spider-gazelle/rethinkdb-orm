@@ -5,7 +5,10 @@ module RethinkORM
     include Iterator(T)
     include Iterator::IteratorWrapper
 
-    def initialize(@iterator : Iterator(RethinkDB::QueryResult))
+    @iterator : Iterator(RethinkDB::QueryResult)
+
+    def initialize(iterator : Iterator(RethinkDB::QueryResult) | RethinkDB::QueryResult)
+      @iterator = iterator.is_a?(Iterator) ? iterator : iterator.as_a.each
     end
 
     def next
