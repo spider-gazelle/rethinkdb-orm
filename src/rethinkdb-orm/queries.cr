@@ -125,6 +125,21 @@ module RethinkORM::Queries
       Collection(self).new(cursor)
     end
 
+    alias R = RethinkDB
+
+    # **Unsafe** method until `where` can accept more generic arguments
+    # Makes 2 **LARGE** assumptions
+    # - User correctly scopes the query under the right table
+    # - User forms a query that returns a collection of models
+    #
+    # Should raise/not compile on malformed query/incorrect return type to create a collection
+    def self.collection_query
+      cursor = Connection.raw do |q|
+        yield q.table(table_name)
+      end
+      Collection(self).new(cursor)
+    end
+
     # **Unsafe** method until `where` can accept more generic arguments
     # Makes 2 **LARGE** assumptions
     # - User correctly scopes the query under the right table
