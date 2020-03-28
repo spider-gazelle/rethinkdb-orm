@@ -15,8 +15,27 @@ class RethinkORM::AssociationCollection(Owner, Target)
     end
   end
 
+  # Filter associated documents
+  #
   def where(**attrs)
-    Target.where(attrs.to_h.merge({"#{foreign_key}" => owner.id}))
+    Target.collection_query do |q|
+      index_query = q.get_all([owner.id], index: foreign_key)
+
+      attrs_hash = attrs.to_h
+      attrs_hash.empty? ? index_query : index_query.filter(attrs_hash)
+    end
+  end
+
+  # :ditto:
+  def where(**attrs)
+    Target.collection_query do |q|
+      index_query = q.get_all([owner.id], index: foreign_key)
+
+      attrs_hash = attrs.to_h
+      attribute_filtered = attrs_hash.empty? ? index_query : index_query.filter(attrs_hash)
+
+      attribute_filtered.filter { |t| yield t }
+    end
   end
 
   def find(value)

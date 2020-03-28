@@ -31,6 +31,10 @@ describe RethinkORM::Associations do
         child
       end
 
+      parent.children.where do |q|
+        q["age"] < 12
+      end.size.should eq 2
+
       children_found = parent.children.to_a.sort_by { |c| c.age || 0 }
       children_found.should eq children
 
