@@ -16,7 +16,13 @@ describe RethinkORM::Queries do
   it "#find!" do
     model = BasicModel.create!(name: Faker::Name.name)
     found_model = BasicModel.find!(model.id.not_nil!)
+
     found_model.id.should eq model.id
+  end
+
+  it "#exists?" do
+    model = BasicModel.create!(name: Faker::Name.name)
+    BasicModel.exists?(model.id.not_nil!).should be_true
   end
 
   describe "#find_all" do

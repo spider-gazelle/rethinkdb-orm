@@ -85,15 +85,21 @@ module RethinkORM::Queries
     # Check for document presence in the table
     #
     def self.exists?(id)
-      !find(id).nil?
+      table_query do |q|
+        q.get(id) != nil
+      end
     end
 
     # Returns documents with columns matching the given criteria
     #
-    # Could use `.get_all`, however this requires an index built on the queried field
-    # TODO: Implement get_all method once index functionality implemented
     def self.find_by(**attribute)
       where(**attribute)
+    end
+
+
+    # :ditto:
+    def self.find_by(**attribute, &predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
+      where(**attribute, &predicate)
     end
 
     # Returns documents for which predicate block is true
