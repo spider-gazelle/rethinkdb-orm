@@ -193,8 +193,8 @@ module RethinkORM::Queries
 
     # Yield a RethinkDB handle namespaced under the document table
     #
-    def self.table_query
-      Connection.raw do |q|
+    def self.table_query(**options)
+      Connection.raw(**options) do |q|
         yield q.table(table_name)
       end
     end

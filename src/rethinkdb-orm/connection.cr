@@ -43,15 +43,15 @@ module RethinkORM
     #
     # Auto creates the database if its not already present.
     # The block defined query is run and raw results returned.
-    def self.raw
+    def self.raw(**options)
       query = yield R
-      query.run(self.db)
+      query.run(self.db, **options)
     end
 
     # Passes query builder and datum term of supplied raw json string
     #
-    def self.raw_json(json : String)
-      raw do |q|
+    def self.raw_json(json : String, **options)
+      raw(**options) do |q|
         yield q, q.json(json)
       end
     end
