@@ -3,12 +3,13 @@ require "./utils/collection"
 require "./utils/changefeed"
 
 module RethinkORM::Queries
+  alias R = RethinkDB
   alias HasChanges = RethinkDB::DatumTerm | RethinkDB::RowTerm | RethinkDB::RowsTerm
 
   macro included
     # Cursor of each model in the database
-    def self.all
-      cursor = Connection.raw do |q|
+    def self.all(**options)
+      cursor = Connection.raw(**options) do |q|
         q.table(table_name)
       end
       Collection(self).new(cursor)
@@ -17,15 +18,15 @@ module RethinkORM::Queries
     # Changefeed at document (if id passed) or table level
     #
     # Yields an infinite iterator  of model events
-    def self.changes(id : String? = nil)
-      cursor = table_query { |q| id ? q.get(id).changes : q.changes }
+    def self.changes(id : String? = nil, **options)
+      cursor = table_query(**options) { |q| id ? q.get(id).changes : q.changes }
       Changefeed(self).new(cursor)
     end
 
     # Creates a Changefeed on query
     #
-    def self.changes(& : RethinkDB::Table -> HasChanges)
-      cursor = table_query do |q|
+    def self.changes(**options, & : RethinkDB::Table -> HasChanges)
+      cursor = table_query(**options) do |q|
         change_query = yield q
         change_query.changes
       end
@@ -35,15 +36,15 @@ module RethinkORM::Queries
     # Establishes a changefeed of models in a RethinkDB table
     # Changefeed at document (id passed) or table level
     #
-    def self.raw_changes(id : String? = nil)
-      cursor = table_query { |q| id ? q.get(id).changes : q.changes }
+    def self.raw_changes(id : String? = nil, **options)
+      cursor = table_query(**options) { |q| id ? q.get(id).changes : q.changes }
       Changefeed::Raw.new(cursor)
     end
 
     # Creates a Changefeed::Raw on query
     #
-    def self.raw_changes(& : RethinkDB::Table -> HasChanges)
-      cursor = table_query do |q|
+    def self.raw_changes(**options, & : RethinkDB::Table -> HasChanges)
+      cursor = table_query(**options) do |q|
         query = yield q
         query.changes
       end
@@ -87,8 +88,8 @@ module RethinkORM::Queries
 
     # Check for document presence in the table
     #
-    def self.exists?(id : String)
-      table_query do |q|
+    def self.exists?(id : String, **options)
+      table_query(**options) do |q|
         q.get(id) != nil
       end
     end
@@ -121,14 +122,12 @@ module RethinkORM::Queries
       Collection(self).new(cursor)
     end
 
-    def self.where(attrs : Hash)
-      cursor = table_query do |q|
+    def self.where(attrs : Hash, **options)
+      cursor = table_query(**options) do |q|
         q.filter(attrs)
       end
       Collection(self).new(cursor)
     end
-
-    alias R = RethinkDB
 
     # **Unsafe** method until `where` can accept more generic arguments
     # Makes 2 **LARGE** assumptions
@@ -136,8 +135,8 @@ module RethinkORM::Queries
     # - User forms a query that returns a collection of models
     #
     # Should raise/not compile on malformed query/incorrect return type to create a collection
-    def self.collection_query
-      cursor = Connection.raw do |q|
+    def self.collection_query(**options)
+      cursor = Connection.raw(**options) do |q|
         yield q.table(table_name)
       end
       Collection(self).new(cursor)
@@ -149,8 +148,8 @@ module RethinkORM::Queries
     # - User forms a query that returns a collection of models
     #
     # Should raise/not compile on malformed query/incorrect return type to create a collection
-    def self.raw_query
-      cursor = Connection.raw do |q|
+    def self.raw_query(**options)
+      cursor = Connection.raw(**options) do |q|
         yield q
       end
       Collection(self).new(cursor)
