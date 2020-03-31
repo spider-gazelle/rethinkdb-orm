@@ -71,7 +71,7 @@ module RethinkORM::Queries
 
     # Look up document by id
     #
-    def self.find_all(ids : Array(String) | Tuple(String), **options)
+    def self.find_all(ids : Array | Tuple, **options)
       get_all(ids, **options)
     end
 
