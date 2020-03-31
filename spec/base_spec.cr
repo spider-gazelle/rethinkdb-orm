@@ -10,7 +10,7 @@ describe RethinkORM::Base do
 
     base.should_not eq base1
 
-    same_base = BasicModel.find(base.id)
+    same_base = BasicModel.find(base.id.not_nil!)
     base.should eq same_base
     base.should_not be same_base
     base1.should_not eq same_base
@@ -22,7 +22,7 @@ describe RethinkORM::Base do
   it "should load database responses" do
     base = BasicModel.create(name: "joe")
 
-    base_found = BasicModel.find!(base.id)
+    base_found = BasicModel.find!(base.id.not_nil!)
 
     base_found.id.should eq base.id
     base_found.should eq base
@@ -32,7 +32,7 @@ describe RethinkORM::Base do
 
   it "should support serialisation" do
     base = BasicModel.create(name: "joe")
-    base_id = base.id
+    base_id = base.id.not_nil!
     base.to_json.should eq ({name: "joe", id: base_id}.to_json)
 
     base.destroy

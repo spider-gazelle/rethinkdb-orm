@@ -57,7 +57,7 @@ describe RethinkORM::Associations do
       coffee.destroy
 
       # Ensure owner association deleted
-      Programmer.exists?(programmer.id).should be_false
+      Programmer.exists?(programmer.id.not_nil!).should be_false
     end
 
     it "#has_one" do
@@ -71,8 +71,8 @@ describe RethinkORM::Associations do
       programmer.destroy
 
       # Ensure both owner and dependent deleted
-      Friend.exists?(friend.id).should be_false
-      Programmer.exists?(programmer.id).should be_false
+      Friend.exists?(friend.id.not_nil!).should be_false
+      Programmer.exists?(programmer.id.not_nil!).should be_false
     end
 
     it "#has_many" do
@@ -93,10 +93,13 @@ describe RethinkORM::Associations do
       dependent_wheels = car.wheels.to_a.sort_by! { |w| w.width || 0 }
       dependent_wheels.should eq wheels
 
+      # Check association method `#find!`
+      car.wheels.find!(wheels.first.id.as(String)).id.should eq wheels.first.id
+
       car.destroy
 
       # Ensure that parent has been destroyed
-      Car.exists?(car.id).should be_false
+      Car.exists?(car.id.not_nil!).should be_false
 
       # Ensure no children persist in the db
       car.wheels.to_a.empty?.should be_true
@@ -109,7 +112,7 @@ describe RethinkORM::Associations do
     coffee.programmer = programmer
     coffee.save
 
-    Coffee.by_programmer_id(programmer.id).first.should eq coffee
+    Coffee.by_programmer_id(programmer.id.not_nil!).first.should eq coffee
 
     coffee.destroy
     programmer.destroy
@@ -120,11 +123,11 @@ describe RethinkORM::Associations do
     child = Child.create!(age: 29, parent_id: parent.id)
 
     child.delete
-    Child.exists?(child.id).should be_false
-    Parent.exists?(parent.id).should be_true
+    Child.exists?(child.id.not_nil!).should be_false
+    Parent.exists?(parent.id.not_nil!).should be_true
 
     parent.delete
-    Parent.exists?(parent.id).should be_false
+    Parent.exists?(parent.id.not_nil!).should be_false
   end
 
   it "should cache associations" do
@@ -139,6 +142,7 @@ describe RethinkORM::Associations do
 
     # reload triggers reset of cached associations
     child.reload!
+
     child.parent.should eq nil
     child.destroy
   end

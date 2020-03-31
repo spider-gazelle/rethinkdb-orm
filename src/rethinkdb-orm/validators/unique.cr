@@ -35,10 +35,15 @@ module RethinkORM::Validators
             {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
           )
         {% else %}
-          # No transform
-          result = {
-            {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
-          }
+
+          {% if scope.size == 1 %}
+            # No transform
+            result = {
+              {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
+            }
+          {% else %}
+            result = {{scope.first.id}}.not_nil!
+          {% end %}
         {% end %}
 
         # Fetch Document

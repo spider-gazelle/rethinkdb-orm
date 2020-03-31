@@ -18,19 +18,22 @@ module RethinkORM::Associations
 
     # Retrieves the parent relationship
     def {{ parent_name.id }} : {{ parent_class }}?
-      parent = self.{{ assoc_var.id }}
-      return parent unless parent.nil?
-      return nil unless self.{{ foreign_key.id }}
+      parent = @{{ assoc_var }}
+      key = self.{{ foreign_key }}
 
-      self.{{ assoc_var.id }} = {{ parent_class }}.find(self.{{ foreign_key.id }})
+      return parent if parent
+
+      self.{{ assoc_var }} = key ? {{ parent_class }}.find(key) : nil
     end
 
     def {{ parent_name.id }}! : {{ parent_class }}
-      parent = self.{{ assoc_var.id }}
-      return parent unless parent.nil?
-      return {{ parent_class }}.new if self.{{ foreign_key.id }}.nil?
+      parent = @{{ assoc_var }}
+      key = self.{{ foreign_key }}
 
-      self.{{ assoc_var.id }} = {{ parent_class }}.find!(self.{{ foreign_key.id }})
+      return parent if parent
+      raise RethinkORM::Error.new("No {{ foreign_key }} set") unless key
+
+      self.{{ assoc_var }} = {{ parent_class }}.find!(key)
     end
 
     # Sets the parent relationship
@@ -67,21 +70,23 @@ module RethinkORM::Associations
       secondary_index({{ foreign_key.id }})
     {% end %}
 
-    # Get cached child, load or create a new child
+    # Get cached child or attempt to load an associated {{child.id}}
     def {{ child.id }} : {{ child_class }}?
-      child = self.{{ assoc_var }}
+      key = self.{{ foreign_key.id }}
+      child = @{{ assoc_var }}
       return child unless child.nil?
 
-      self.{{ assoc_var }} = self.{{ foreign_key.id }} ? {{ child_class }}.find(self.{{ foreign_key.id }})
-                                                       : nil
+      self.{{ assoc_var }} = key && !key.empty? ? {{ child_class }}.find(key)
+                                                : nil
     end
 
     def {{ child.id }}! : {{ child_class }}
-      child = self.{{ assoc_var }}
+      key = self.{{ foreign_key.id }}
+      child = @{{ assoc_var }}
       return child unless child.nil?
-      return {{ child_class }}.new if self.{{ foreign_key.id }}.nil?
+      raise RethinkORM::Error.new("No {{ foreign_key.id }} set") unless key
 
-      self.{{ assoc_var }} = {{ child_class }}.find!(self.{{ foreign_key.id }} )
+      self.{{ assoc_var }} = {{ child_class }}.find!(key)
     end
 
     def {{ child.id }}=(child)

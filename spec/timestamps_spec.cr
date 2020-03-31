@@ -25,7 +25,7 @@ describe RethinkORM::Timestamps do
     model.updated_at.not_nil!.should_not eq model.created_at
     model.updated_at.not_nil!.should be > model.created_at.not_nil!
 
-    found_model = Timo.find!(model.id)
+    found_model = Timo.find!(model.id.not_nil!)
     found_model.updated_at.not_nil!.should be_close(model.updated_at.not_nil!, delta: Time::Span.new(seconds: 1, nanoseconds: 0))
     found_model.updated_at.not_nil!.should_not be_close(model.created_at.not_nil!, delta: Time::Span.new(seconds: 1, nanoseconds: 0))
 

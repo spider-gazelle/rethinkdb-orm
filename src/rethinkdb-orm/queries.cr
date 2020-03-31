@@ -14,9 +14,9 @@ module RethinkORM::Queries
       Collection(self).new(cursor)
     end
 
-    # Infinite iterator  of models in a RethinkDB table
-    # Changefeed at document (id passed) or table level
+    # Changefeed at document (if id passed) or table level
     #
+    # Yields an infinite iterator  of model events
     def self.changes(id : String? = nil)
       cursor = table_query { |q| id ? q.get(id).changes : q.changes }
       Changefeed(self).new(cursor)
@@ -53,7 +53,7 @@ module RethinkORM::Queries
     # Lookup document by id
     #
     # Throws if document is not present
-    def self.find!(id, **options)
+    def self.find!(id : String, **options)
       document = find(id, **options)
       raise RethinkORM::Error::DocumentNotFound.new("Key not present: #{id}") unless document
       document
@@ -61,22 +61,25 @@ module RethinkORM::Queries
 
     # Find single document by id
     #
-    def self.find(id, **options)
-      documents = find_all([id], **options)
-      documents.first?
+    def self.find(id : String, **options)
+      result = table_query(**options) do |q|
+        q.get(id)
+      end
+
+      self.from_trusted_json(result.to_json) unless result.raw.nil?
     end
 
     # Look up document by id
     #
-    def self.find_all(ids, **options)
+    def self.find_all(ids : Array(String) | Tuple(String), **options)
       get_all(ids, **options)
     end
 
     # Query by ids, optionally set a secondary index
     #
-    def self.get_all(ids, **options)
+    def self.get_all(values : Array | Tuple, **options)
       cursor = table_query do |q|
-        q.get_all(ids, **options)
+        q.get_all(values, **options)
       end
 
       Collection(self).new(cursor)
@@ -84,7 +87,7 @@ module RethinkORM::Queries
 
     # Check for document presence in the table
     #
-    def self.exists?(id)
+    def self.exists?(id : String)
       table_query do |q|
         q.get(id) != nil
       end

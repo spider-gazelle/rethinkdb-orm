@@ -14,7 +14,7 @@ describe RethinkORM::Validators do
 
     it "validates if the model is the same" do
       special_snowflake = Snowflake.create!(shape: "a super special snowflake", meltiness: 5)
-      same_flake = Snowflake.find(special_snowflake.id)
+      same_flake = Snowflake.find(special_snowflake.id.not_nil!)
 
       same_flake.should_not eq nil
       unless same_flake.nil?

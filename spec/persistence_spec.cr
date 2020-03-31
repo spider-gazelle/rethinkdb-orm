@@ -22,7 +22,7 @@ describe RethinkORM::Persistence do
     model.new_record?.should be_false
     model.destroyed?.should be_false
 
-    loaded_model = BasicModel.find(model.id)
+    loaded_model = BasicModel.find(model.id.not_nil!)
     loaded_model.should eq model
 
     model.destroy
@@ -60,7 +60,7 @@ describe RethinkORM::Persistence do
     model.new_record?.should be_false
     model.destroyed?.should be_false
 
-    loaded_model = BasicModel.find(model.id)
+    loaded_model = BasicModel.find(model.id.not_nil!)
     loaded_model.should eq model
 
     model.destroy
@@ -68,7 +68,7 @@ describe RethinkORM::Persistence do
     model.destroyed?.should be_true
     model.persisted?.should be_false
 
-    BasicModel.find(model.id).nil?.should be_true
+    BasicModel.exists?(model.id.not_nil!).should be_false
   end
 
   it "#reload!" do
@@ -83,7 +83,7 @@ describe RethinkORM::Persistence do
     model.name = nil
     model.changed?.should be_true
 
-    model_copy = BasicModel.find!(model.id)
+    model_copy = BasicModel.find!(model.id.not_nil!)
     model_copy.name = "bill"
     model_copy.save!
 
@@ -110,13 +110,13 @@ describe RethinkORM::Persistence do
     models.all? { |m| m.name == name }.should be_true
 
     BasicModel.clear
-    BasicModel.all.to_a.empty?.should be_true
+    BasicModel.count.should eq 0
   end
 
   it "should save/load fields with converters" do
     time = Time.unix(rand(1000000))
     model = ConvertedFields.create!(name: "gremlin", time: time)
-    loaded = ConvertedFields.find!(model.id)
+    loaded = ConvertedFields.find!(model.id.not_nil!)
 
     loaded.time.should eq model.time
   end
@@ -138,7 +138,7 @@ describe RethinkORM::Persistence do
     model.destroyed?.should be_false
     model.persisted?.should be_true
 
-    loaded_model = ModelWithDefaults.find(model.id)
+    loaded_model = ModelWithDefaults.find(model.id.not_nil!)
     loaded_model.should eq model
 
     model.destroy
@@ -185,7 +185,7 @@ describe RethinkORM::Persistence do
   it "persists only persisted attributes" do
     model = LittleBitPersistent.create!(name: "Johnny Johnny", age: 100)
 
-    loaded_model = LittleBitPersistent.find(model.id)
+    loaded_model = LittleBitPersistent.find(model.id.not_nil!)
     loaded_model.should_not eq nil
     if loaded_model
       loaded_model.age.should eq nil
@@ -281,7 +281,7 @@ describe RethinkORM::Persistence do
       # Test Update
       model.update_fields(address: "other")
       model.address.should eq "other"
-      loaded = ModelWithCallbacks.find model.id
+      loaded = ModelWithCallbacks.find(model.id.not_nil!)
       loaded.try(&.address).should eq "other"
 
       # Test delete skipping callbacks
