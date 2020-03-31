@@ -89,9 +89,11 @@ module RethinkORM::Queries
     # Check for document presence in the table
     #
     def self.exists?(id : String, **options)
-      table_query(**options) do |q|
+      result = table_query(**options) do |q|
         q.get(id) != nil
       end
+
+      result.as_bool
     end
 
     # Returns documents with columns matching the given criteria
@@ -177,18 +179,10 @@ module RethinkORM::Queries
 
     # Returns a count of documents for which predicate block is true
     #
-    def self.count(&predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
-      result = table_query do |q|
-        q.filter(&predicate).count
-      end
-      result.try(&.as_i) || 0
-    end
-
-    # Returns a count of documents for which predicate block is true
-    #
     def self.count(**attrs, &predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
       result = table_query do |q|
-        q.filter(attrs).filter(&predicate).count
+        handle = (attrs.empty? ? q : q.filter(attrs))
+        handle.filter(&predicate).count
       end
       result.try(&.as_i) || 0
     end
