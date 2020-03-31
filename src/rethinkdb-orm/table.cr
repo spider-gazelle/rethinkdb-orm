@@ -4,6 +4,7 @@ module RethinkORM::Table
 
   macro included
     macro inherited
+      # :nodoc:
       TABLE_NAME = {} of Symbol => String
       __set_default_table__
     end
@@ -19,7 +20,10 @@ module RethinkORM::Table
   end
 
   macro __process_table__
-    {% RethinkORM::Base::TABLES << TABLE_NAME[:name] %}
+    {% unless RethinkORM::Base::TABLES.includes?(TABLE_NAME[:name]) %}
+      {% RethinkORM::Base::TABLES << TABLE_NAME[:name] %}
+    {% end %}
+
     @@table_name : String = {{ TABLE_NAME[:name] }}
 
     def self.table_name
