@@ -1,5 +1,5 @@
 name: rethinkdb-orm
-version: 2.7.3
+version: 2.7.4
 crystal: 0.33.0
 license: MIT
 
@@ -9,16 +9,16 @@ authors:
 dependencies:
   active-model:
     github: spider-gazelle/active-model
-    version: ~> 1.8.2
+    version: ~> 1.8
   habitat:
     github: luckyframework/habitat
   rethinkdb:
     github: aca-labs/crystal-rethinkdb
-    version: ~> 0.2.0
+    version: ~> 0.2
 
 development_dependencies:
   ameba:
     github: crystal-ameba/ameba
-    version: ~> 0.10.1
+    version: ~> 0.12
   faker:
     github: askn/faker
