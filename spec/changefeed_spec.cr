@@ -43,6 +43,8 @@ module RethinkORM
             events << change[:event]
             finished_channel.send nil
             break
+          else
+            raise "unexpected index #{index}"
           end
         end
       end
@@ -111,6 +113,8 @@ module RethinkORM
             when 3
               events << change[:event]
               finished_channel.send nil
+            else
+              raise "unexpected index #{index}"
             end
           end
         end
