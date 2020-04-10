@@ -1,5 +1,5 @@
 name: rethinkdb-orm
-version: 2.7.4
+version: 2.8.0
 license: MIT
 
 authors:
@@ -11,7 +11,7 @@ dependencies:
   habitat:
     github: luckyframework/habitat
   rethinkdb:
-    github: aca-labs/crystal-rethinkdb
+    github: place-labs/crystal-rethinkdb
 
 development_dependencies:
   ameba:
