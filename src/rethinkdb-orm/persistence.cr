@@ -7,7 +7,8 @@ module RethinkORM::Persistence
   # Flag to allow lazy querying of table status
   @@table_created = false
 
-  protected property _new_flag = false
+  # :nodoc:
+  property _new_flag = false
 
   # Id generated on save or set on load
   def new_record?
@@ -223,7 +224,10 @@ module RethinkORM::Persistence
 
         success = (response["inserted"]?.try(&.as_i?) || 0) > 0
 
-        clear_changes_information if success
+        if success
+          clear_changes_information
+          _new_flag = false
+        end
 
         success
       end
