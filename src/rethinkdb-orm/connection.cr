@@ -91,7 +91,13 @@ module RethinkORM
           fix_duplicate_table_query(table).run(connection)
 
           index_creation.try &.map do |create, wait|
-            create.run(connection)
+            begin
+              create.run(connection)
+            rescue e : RethinkDB::ReqlOpFailedError
+              # Ignore index already exists error
+              raise e unless e.message.try &.includes?("already exists")
+            end
+
             future { wait.run(connection) }
           end.each(&.get)
         }
