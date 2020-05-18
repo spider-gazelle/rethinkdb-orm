@@ -72,7 +72,6 @@ module RethinkORM::Persistence
   # the existing record gets updated.
   def save(**options)
     raise RethinkORM::Error::DocumentNotSaved.new("Cannot save a destroyed document!") if destroyed?
-    return false unless valid?
 
     new_record? ? __create(**options) : __update(**options)
   end
@@ -180,11 +179,11 @@ module RethinkORM::Persistence
   # Internal update function, runs callbacks and pushes update to RethinkDB
   #
   protected def __update(**options)
-    return false unless valid?
     return true unless changed?
 
     run_update_callbacks do
       run_save_callbacks do
+        return false unless valid?
         response = Connection.raw_json(self.to_json) do |q, doc|
           q.table(@@table_name)
             .get(@id)
@@ -210,6 +209,8 @@ module RethinkORM::Persistence
   protected def __create(**options)
     run_create_callbacks do
       run_save_callbacks do
+        return false unless valid?
+
         # TODO: Allow user to tag an attribute as primary key.
         #       Requires either changing default primary key or using secondary index
         id_local = @id
