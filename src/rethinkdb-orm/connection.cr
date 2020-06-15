@@ -1,3 +1,4 @@
+require "future"
 require "habitat"
 require "mutex"
 require "rethinkdb"
