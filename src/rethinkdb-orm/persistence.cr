@@ -227,7 +227,7 @@ module RethinkORM::Persistence
 
         if success
           clear_changes_information
-          _new_flag = false
+          self._new_flag = false
         end
 
         success
