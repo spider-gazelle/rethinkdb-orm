@@ -39,7 +39,7 @@ class RethinkORM::IdGenerator
       converted.push(base[digit])
     end
 
-    converted << base[0] if converted.empty?
+    converted << base.first if converted.empty?
     converted.reverse.join
   end
 end

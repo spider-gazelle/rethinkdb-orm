@@ -5,19 +5,19 @@ require "../src/rethinkdb-orm/**"
 
 class BasicModel < RethinkORM::Base
   attribute name : String
-  attribute address : String
-  attribute age : Int32
+  attribute address : String?
+  attribute age : Int32 = 0
 end
 
 class ModelWithDefaults < RethinkORM::Base
   attribute name : String = "bob"
-  attribute address : String
+  attribute address : String?
   attribute age : Int32 = 23
 end
 
 class ModelWithCallbacks < RethinkORM::Base
   attribute name : String
-  attribute address : String
+  attribute address : String?
   attribute age : Int32 = 10
 
   before_create :update_name
@@ -43,7 +43,7 @@ end
 
 class ModelWithValidations < RethinkORM::Base
   attribute name : String
-  attribute address : String
+  attribute address : String?
   attribute age : Int32 = 10
 
   validates :name, presence: true
@@ -62,19 +62,19 @@ end
 
 # Association Models
 
-class Fruit < RethinkORM::Base
-  attribute type : String
-  belongs_to Orchard, association_name: :orchy
-end
-
 class Orchard < RethinkORM::Base
   attribute name : String
   has_one Fruit, association_name: :froot
 end
 
+class Fruit < RethinkORM::Base
+  attribute type : String
+  belongs_to Orchard, association_name: :orchy
+end
+
 class Car < RethinkORM::Base
   attribute brand : String
-  attribute vin : String
+  attribute vin : String = UUID.random.to_s
 
   secondary_index :vin
   has_many Wheel, collection_name: "wheels", dependent: :destroy
@@ -140,12 +140,12 @@ end
 # Validation models
 
 class Snowflake < RethinkORM::Base
-  attribute shape : String
-  attribute meltiness : Int32
-  attribute personality : String
-  attribute taste : String
-  attribute vibe : String
-  attribute size : Int32
+  attribute shape : String = UUID.random.to_s
+  attribute meltiness : Int32 = Random.rand(100).to_i
+  attribute personality : String = UUID.random.to_s
+  attribute taste : String = UUID.random.to_s
+  attribute vibe : String = UUID.random.to_s
+  attribute size : Int32 = 0
 
   ensure_unique :meltiness
   ensure_unique :shape, callback: :id

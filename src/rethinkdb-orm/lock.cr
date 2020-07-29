@@ -17,7 +17,7 @@ module RethinkORM
     table "locks"
 
     # TODO: set to `key_hash` when primary_key supported
-    attribute id : String
+    attribute id : String?
 
     # Key is not an index, PKs are 127 chars.
     attribute key : String

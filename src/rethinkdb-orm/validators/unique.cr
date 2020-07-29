@@ -28,21 +28,21 @@ module RethinkORM::Validators
           transform_proc : Proc({{ proc_arg_type }}, {{ proc_return_type }}) = ->({{ signature.id }}) { {{ transform.body }} }
 
           result : {{ proc_return_type }} = transform_proc.call(
-            {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
+            {% for s in scope %}this.{{s.id}},{% end %}
           )
         {% elsif callback %}
           result : {{ proc_return_type }} = this.{{ callback.id }}(
-            {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
+            {% for s in scope %}this.{{s.id}},{% end %}
           )
         {% else %}
 
           {% if scope.size == 1 %}
             # No transform
             result = {
-              {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
+              {% for s in scope %}this.{{s.id}},{% end %}
             }
           {% else %}
-            result = {{scope.first.id}}.not_nil!
+            result = {{scope.first.id}}
           {% end %}
         {% end %}
 

@@ -19,7 +19,9 @@ module RethinkORM
         end
       end
 
-      base.update(name: "stimpy")
+      base.name = "stimpy"
+      base.save
+
       coordination.receive
       changes.should eq [{:name => "stimpy"}]
 
@@ -89,7 +91,9 @@ module RethinkORM
           end
         end
 
-        base.update(name: "stimpy")
+        base.name = "stimpy"
+        base.save
+
         updated_json = JSON.parse base.to_json
 
         coordination.receive

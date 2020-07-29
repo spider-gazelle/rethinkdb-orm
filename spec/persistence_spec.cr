@@ -22,7 +22,7 @@ describe RethinkORM::Persistence do
     model.new_record?.should be_false
     model.destroyed?.should be_false
 
-    loaded_model = BasicModel.find(model.id.not_nil!)
+    loaded_model = BasicModel.find(model.id.as(String))
     loaded_model.should eq model
 
     model.destroy
@@ -33,7 +33,9 @@ describe RethinkORM::Persistence do
 
   it "#update" do
     model = BasicModel.new
-    model.update(name: "bob", age: 34)
+    model.name = "bob"
+    model.age = 34
+    model.save
 
     model.new_record?.should be_false
     model.destroyed?.should be_false
@@ -41,7 +43,7 @@ describe RethinkORM::Persistence do
 
     model.name.should eq "bob"
     model.age.should eq 34
-    model.address.should eq nil
+    model.@address.should be_nil
 
     model.destroy
     model.destroyed?.should be_true
@@ -60,7 +62,7 @@ describe RethinkORM::Persistence do
     model.new_record?.should be_false
     model.destroyed?.should be_false
 
-    loaded_model = BasicModel.find(model.id.not_nil!)
+    loaded_model = BasicModel.find(model.id.as(String))
     loaded_model.should eq model
 
     model.destroy
@@ -68,7 +70,7 @@ describe RethinkORM::Persistence do
     model.destroyed?.should be_true
     model.persisted?.should be_false
 
-    BasicModel.exists?(model.id.not_nil!).should be_false
+    BasicModel.exists?(model.id.as(String)).should be_false
   end
 
   it "#reload!" do
@@ -80,11 +82,11 @@ describe RethinkORM::Persistence do
 
     model.save.should be_true
     id = model.id
-    model.name = nil
+    model.name = "bill"
     model.changed?.should be_true
 
-    model_copy = BasicModel.find!(model.id.not_nil!)
-    model_copy.name = "bill"
+    model_copy = BasicModel.find!(model.id.as(String))
+    model_copy.name = "bib"
     model_copy.save!
 
     model.reload!
@@ -92,7 +94,7 @@ describe RethinkORM::Persistence do
     model.changed?.should be_false
 
     model.id.should eq id
-    model.name.should eq "bill"
+    model.name.should eq "bib"
 
     model.destroy
   end
@@ -116,7 +118,7 @@ describe RethinkORM::Persistence do
   it "should save/load fields with converters" do
     time = Time.unix(rand(1000000))
     model = ConvertedFields.create!(name: "gremlin", time: time)
-    loaded = ConvertedFields.find!(model.id.not_nil!)
+    loaded = ConvertedFields.find!(model.id.as(String))
 
     loaded.time.should eq model.time
   end
@@ -126,7 +128,7 @@ describe RethinkORM::Persistence do
 
     model.name.should eq "bob"
     model.age.should eq 23
-    model.address.should eq nil
+    model.address.should be_nil
 
     model.new_record?.should be_true
     model.destroyed?.should be_false
@@ -138,7 +140,7 @@ describe RethinkORM::Persistence do
     model.destroyed?.should be_false
     model.persisted?.should be_true
 
-    loaded_model = ModelWithDefaults.find(model.id.not_nil!)
+    loaded_model = ModelWithDefaults.find(model.id.as(String))
     loaded_model.should eq model
 
     model.destroy
@@ -155,19 +157,22 @@ describe RethinkORM::Persistence do
     # Test create
     result = model.save
     result.should be_false
-    model.errors.size.should eq 2
+    model.errors.size.should eq 1
 
     expect_raises(RethinkORM::Error::DocumentInvalid) do
       model.save!
     end
 
+    model.errors.clear
+
     model.name = "bob"
     model.age = 23
-    model.valid?.should be_true
+
     model.save.should be_true
+    model.valid?.should be_true
 
     # Test update
-    model.name = nil
+    model.name = ""
     model.valid?.should be_false
     model.save.should be_false
     expect_raises(RethinkORM::Error::DocumentInvalid) do
@@ -185,10 +190,10 @@ describe RethinkORM::Persistence do
   it "persists only persisted attributes" do
     model = LittleBitPersistent.create!(name: "Johnny Johnny", age: 100)
 
-    loaded_model = LittleBitPersistent.find(model.id.not_nil!)
-    loaded_model.should_not eq nil
+    loaded_model = LittleBitPersistent.find(model.id.as(String))
+    loaded_model.should_not be_nil
     if loaded_model
-      loaded_model.age.should eq nil
+      loaded_model.age.should be_nil
       loaded_model.should_not eq model
       loaded_model.persistent_attributes.should eq model.persistent_attributes
     end
@@ -198,12 +203,12 @@ describe RethinkORM::Persistence do
 
   describe "callbacks" do
     it "execute callbacks" do
-      model = ModelWithCallbacks.new
+      model = ModelWithCallbacks.new(name: "bob")
 
       # Test initialize
-      model.name.should eq nil
+      model.name.should eq "bob"
       model.age.should eq 10
-      model.address.should eq nil
+      model.address.should be_nil
 
       model.new_record?.should be_true
       model.destroyed?.should be_false
@@ -235,12 +240,12 @@ describe RethinkORM::Persistence do
     end
 
     it "skips destroy callbacks on delete" do
-      model = ModelWithCallbacks.new
+      model = ModelWithCallbacks.new(name: "bob")
 
       # Test initialize
-      model.name.should eq nil
+      model.name.should eq "bob"
       model.age.should eq 10
-      model.address.should eq nil
+      model.address.should be_nil
 
       model.new_record?.should be_true
       model.destroyed?.should be_false
@@ -259,12 +264,12 @@ describe RethinkORM::Persistence do
     end
 
     it "skips callbacks when updating fields" do
-      model = ModelWithCallbacks.new
+      model = ModelWithCallbacks.new(name: "bob")
 
       # Test initialize
-      model.name.should eq nil
+      model.name.should eq "bob"
+      model.address.should be_nil
       model.age.should eq 10
-      model.address.should eq nil
 
       model.new_record?.should be_true
       model.destroyed?.should be_false
@@ -280,8 +285,9 @@ describe RethinkORM::Persistence do
 
       # Test Update
       model.update_fields(address: "other")
+
       model.address.should eq "other"
-      loaded = ModelWithCallbacks.find(model.id.not_nil!)
+      loaded = ModelWithCallbacks.find(model.id.as(String))
       loaded.try(&.address).should eq "other"
 
       # Test delete skipping callbacks
