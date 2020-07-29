@@ -22,7 +22,7 @@ describe RethinkORM::Base do
   it "should load database responses" do
     base = BasicModel.create(name: "joe")
 
-    base_found = BasicModel.find!(base.id.not_nil!)
+    base_found = BasicModel.find!(base.id.as(String))
 
     base_found.id.should eq base.id
     base_found.should eq base
@@ -32,8 +32,8 @@ describe RethinkORM::Base do
 
   it "should support serialisation" do
     base = BasicModel.create(name: "joe")
-    base_id = base.id.not_nil!
-    base.to_json.should eq ({name: "joe", id: base_id}.to_json)
+    base_id = base.id
+    base.to_json.should eq ({name: "joe", age: 0, id: base_id}.to_json)
 
     base.destroy
   end
@@ -41,10 +41,10 @@ describe RethinkORM::Base do
   it "should support dirty attributes" do
     begin
       base = BasicModel.new
-      base.changed_attributes.empty?.should be_true
+      changed_attributes = base.changed_attributes
 
       base.name = "change"
-      base.changed_attributes.empty?.should be_false
+      base.changed_attributes.size.should eq (changed_attributes.size + 1)
 
       base = BasicModel.new(name: "bob")
       base.changed_attributes.empty?.should be_false

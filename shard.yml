@@ -1,5 +1,5 @@
 name: rethinkdb-orm
-version: 2.10.1
+version: 3.0.0
 license: MIT
 
 authors:
@@ -8,6 +8,7 @@ authors:
 dependencies:
   active-model:
     github: spider-gazelle/active-model
+    version: ~> 2
   future:
     github: crystal-community/future.cr
   habitat:

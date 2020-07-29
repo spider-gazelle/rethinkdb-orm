@@ -15,14 +15,14 @@ describe RethinkORM::Queries do
 
   it "#find!" do
     model = BasicModel.create!(name: Faker::Name.name)
-    found_model = BasicModel.find!(model.id.not_nil!)
+    found_model = BasicModel.find!(model.id.as(String))
 
     found_model.id.should eq model.id
   end
 
   it "#exists?" do
     model = BasicModel.create!(name: Faker::Name.name)
-    BasicModel.exists?(model.id.not_nil!).should be_true
+    BasicModel.exists?(model.id.as(String)).should be_true
   end
 
   describe "#find_all" do
@@ -147,7 +147,7 @@ describe RethinkORM::Queries do
     }
 
     # Check the correct
-    get_tree_ids.call(roots[0]).should eq [tree_ids[0]]
+    get_tree_ids.call(roots.first).should eq [tree_ids.first]
     get_tree_ids.call(roots[1]).should eq tree_ids.sort
     get_tree_ids.call(roots[2]).should eq [tree_ids[1]]
   end

@@ -6,8 +6,8 @@ describe RethinkORM::Timestamps do
 
     model.created_at.should be_a(Time)
     model.updated_at.should be_a(Time)
-    model.created_at.not_nil!.should eq model.updated_at.not_nil!
-    model.created_at.not_nil!.should be < Time.utc
+    model.created_at.should eq model.updated_at
+    model.created_at.should be < Time.utc
 
     model.destroy
   end
@@ -17,17 +17,19 @@ describe RethinkORM::Timestamps do
 
     model.created_at.should be_a(Time)
     model.updated_at.should be_a(Time)
-    model.created_at.not_nil!.should eq model.updated_at
+    model.created_at.should eq model.updated_at
 
     sleep 2
 
-    model.update(name: "Timooooo?")
-    model.updated_at.not_nil!.should_not eq model.created_at
-    model.updated_at.not_nil!.should be > model.created_at.not_nil!
+    model.name = "Timooooo?"
+    model.save
 
-    found_model = Timo.find!(model.id.not_nil!)
-    found_model.updated_at.not_nil!.should be_close(model.updated_at.not_nil!, delta: Time::Span.new(seconds: 1, nanoseconds: 0))
-    found_model.updated_at.not_nil!.should_not be_close(model.created_at.not_nil!, delta: Time::Span.new(seconds: 1, nanoseconds: 0))
+    model.updated_at.should_not eq model.created_at
+    model.updated_at.should be > model.created_at
+
+    found_model = Timo.find!(model.id.as(String))
+    found_model.updated_at.should be_close(model.updated_at, delta: Time::Span.new(seconds: 1, nanoseconds: 0))
+    found_model.updated_at.should_not be_close(model.created_at, delta: Time::Span.new(seconds: 1, nanoseconds: 0))
 
     model.destroy
   end

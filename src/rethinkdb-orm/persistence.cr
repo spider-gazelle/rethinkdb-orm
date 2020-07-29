@@ -103,14 +103,16 @@ module RethinkORM::Persistence
     self
   end
 
-  # Highly inefficient serialization of model subset.
-  # FIXME: optimise
+  # Serialization of a subset of the model's attributes.
+  #
+  # FIXME: Optimise
   protected def subset_json(fields : Enumerable(String) | Enumerable(Symbol))
     string_keys = fields.is_a?(Enumerable(String)) ? fields : fields.map(&.to_s)
     JSON.parse(self.to_json).as_h.select!(string_keys).to_json
   end
 
-  # Atomically update fields, without running callbacks
+  # Atomically update specified fields, without running callbacks
+  #
   def update_fields(**attributes)
     raise RethinkORM::Error::DocumentNotSaved.new("Cannot update fields of a new document!") if new_record?
 
@@ -157,18 +159,11 @@ module RethinkORM::Persistence
   # - RethinkORM::Error::DocumentNotFound : If document fails to load
   def reload!
     raise RethinkORM::Error::DocumentNotSaved.new("Cannot reload unpersisted document") unless persisted?
-    loaded = self.class.find!(@id.as(String))
 
-    # TODO: Make this faster by updating active-model to accept generic hashes, or at least the attributes hash of the same class
-    new_attributes = loaded.attributes.reduce({} of String => String) do |attrs, kv|
-      key, value = kv
-      unless value.nil?
-        attrs[key.to_s] = value.to_s
-      end
-      attrs
-    end
+    found = self.class.table_query &.get(self.id)
+    raise RethinkORM::Error::DocumentNotFound.new("Key not present: #{id}") if found.raw.nil?
 
-    assign_attributes(new_attributes)
+    assign_attributes_from_trusted_json(found.to_json)
 
     clear_changes_information
     reset_associations
@@ -184,6 +179,7 @@ module RethinkORM::Persistence
     run_update_callbacks do
       run_save_callbacks do
         return false unless valid?
+
         response = Connection.raw_json(self.to_json) do |q, doc|
           q.table(@@table_name)
             .get(@id)
@@ -214,6 +210,7 @@ module RethinkORM::Persistence
         # TODO: Allow user to tag an attribute as primary key.
         #       Requires either changing default primary key or using secondary index
         id_local = @id
+
         @id = @@uuid_generator.next(self) if id_local.nil? || id_local.empty?
 
         response = Connection.raw_json(self.to_json) do |q, doc|
