@@ -8,31 +8,32 @@ module RethinkORM::Validators
       validate "#{ {{ field }} } should be unique", ->(this: self) do
         {% if scope.empty? %}
           {% scope = [field] %}
-          {% proc_return_type = FIELDS[field.id][:klass] %}
+          {% proc_return_type = FIELDS[field.id][:klass].union_types.reject { |t| t == Nil }.join('|').id %}
         {% else %}
-          {% proc_return_type = "Tuple(#{scope.map { |s| FIELDS[s.id][:klass] }.join(", ").id})".id %}
+          {% proc_return_type = "Tuple(#{scope.map { |s| FIELDS[s.id][:klass].union_types.reject { |t| t == Nil }.join('|').id }.join(", ").id})".id %}
         {% end %}
-
-        # Construct proc type fron scope array (forgive me mother, for I have sinned)
-        {% proc_arg_type = "#{scope.map { |s| FIELDS[s.id][:klass] }.join(", ").id}".id %}
-        {% signature = "#{scope.map { |s| "#{s.id}: #{FIELDS[s.id][:klass]}" }.join(", ").id}".id %}
 
         # Return if any values are nil
         {% for s in scope %}
           return true if this.{{s.id}}.nil?
         {% end %}
 
+        # Construct proc type fron scope array (forgive me mother, for I have sinned)
+        # Arguments are not-nillable as nil status is checked above.
+        {% proc_arg_type = "#{scope.map { |s| FIELDS[s.id][:klass].union_types.reject { |t| t == Nil }.join('|').id }.join(", ").id}".id %}
+        {% signature = "#{scope.map { |s| "#{s.id}: #{FIELDS[s.id][:klass].union_types.reject { |t| t == Nil }.join('|').id}" }.join(", ").id}".id %}
+
         # Handle Transformation block/callback
         {% if transform %}
-          # Construct a proc from a given block, call with argument
+          # Construct a proc from a given block, call with argument.
           transform_proc : Proc({{ proc_arg_type }}, {{ proc_return_type }}) = ->({{ signature.id }}) { {{ transform.body }} }
 
           result : {{ proc_return_type }} = transform_proc.call(
-            {% for s in scope %}this.{{s.id}},{% end %}
+          {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
           )
         {% elsif callback %}
           result : {{ proc_return_type }} = this.{{ callback.id }}(
-            {% for s in scope %}this.{{s.id}},{% end %}
+            {% for s in scope %}this.{{s.id}}.not_nil!,{% end %}
           )
         {% else %}
 
