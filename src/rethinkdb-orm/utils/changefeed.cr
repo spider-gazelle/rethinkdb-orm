@@ -18,6 +18,7 @@ module RethinkORM
     def stop
       @iterator.stop
       super
+    rescue Channel::ClosedError
     end
 
     def next
@@ -27,6 +28,8 @@ module RethinkORM
       else
         parse_changes result
       end
+    rescue Channel::ClosedError
+      raise Error::ChangefeedClosed.new
     rescue e
       if e.message =~ /Changefeed aborted/
         stop

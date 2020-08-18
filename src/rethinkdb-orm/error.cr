@@ -5,6 +5,9 @@ class RethinkORM::Error < Exception
     super(message)
   end
 
+  class ChangefeedClosed < Error
+  end
+
   class DocumentExists < Error
   end
 
