@@ -17,6 +17,23 @@ Extending [ActiveModel](https://github.com/spider-gazelle/active-model) for attr
     - [`ensure_unique`](#ensureunique)
   - [Timestamps](#timestamps)
 
+## Configuration
+
+```crystal
+# Below is the list of settings exposed by RethinkORM and their defaults
+RethinkORM::Settings.configure do |settings|
+  settings.host = ENV["RETHINKDB_HOST"]? || "localhost"
+  settings.port = (ENV["RETHINKDB_PORT"]? || 28015).to_i
+  settings.db = ENV["RETHINKDB_DB"]? || ENV["RETHINKDB_DATABASE"]? || "test"
+  settings.user = ENV["RETHINKDB_USER"]? || "admin"
+  settings.password = ENV["RETHINKDB_PASSWORD"]? || ""
+  settings.retry_interval = (ENV["RETHINKDB_TIMEOUT"]? || 2).to_i.seconds
+  settings.retry_attempts = ENV["RETHINKDB_RETRIES"]?.try &.to_i
+  settings.lock_expire = (ENV["RETHINKDB_LOCK_EXPIRE"]? || 30).to_i.seconds
+  settings.lock_timeout = (ENV["RETHINKDB_LOCK_TIMEOUT"]? || 5).to_i.seconds
+end
+```
+
 ## Callbacks
 
 Register callbacks for `save`, `update`, `create` and `destroy` by setting the corresponding before/after callback handler.
