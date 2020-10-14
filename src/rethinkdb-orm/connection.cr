@@ -46,7 +46,9 @@ module RethinkORM
     # The block defined query is run and raw results returned.
     def self.raw(**options)
       query = yield R
-      query.run(self.db, **options)
+      Retriable.retry(max_attempts: settings.query_retries, on: IO::Error) do
+        query.run(self.db, **options)
+      end
     end
 
     # Passes query builder and datum term of supplied raw json string

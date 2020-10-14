@@ -1,3 +1,5 @@
+require "retriable"
+
 require "./connection"
 require "./utils/collection"
 require "./utils/changefeed"
