@@ -1,5 +1,5 @@
 name: rethinkdb-orm
-version: 3.0.2
+version: 3.0.3
 license: MIT
 
 authors:
@@ -16,6 +16,8 @@ dependencies:
   rethinkdb:
     github: kingsleyh/crystal-rethinkdb
     version: ~> 0.2
+  retriable:
+    github: Sija/retriable.cr
 
 development_dependencies:
   ameba:

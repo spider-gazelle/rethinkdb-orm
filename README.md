@@ -27,10 +27,15 @@ RethinkORM::Settings.configure do |settings|
   settings.db = ENV["RETHINKDB_DB"]? || ENV["RETHINKDB_DATABASE"]? || "test"
   settings.user = ENV["RETHINKDB_USER"]? || "admin"
   settings.password = ENV["RETHINKDB_PASSWORD"]? || ""
-  settings.retry_interval = (ENV["RETHINKDB_TIMEOUT"]? || 2).to_i.seconds
-  settings.retry_attempts = ENV["RETHINKDB_RETRIES"]?.try &.to_i
   settings.lock_expire = (ENV["RETHINKDB_LOCK_EXPIRE"]? || 30).to_i.seconds
   settings.lock_timeout = (ENV["RETHINKDB_LOCK_TIMEOUT"]? || 5).to_i.seconds
+  settings.retry_interval = (ENV["RETHINKDB_TIMEOUT"]? || 2).to_i.seconds
+
+  # Driver level reconnection attempts
+  settings.retry_attempts = ENV["RETHINKDB_RETRIES"]?.try &.to_i
+
+  # ORM level query retries
+  settings.query_retries = ENV["RETHINKDB_QUERY_RETRIES"]?.try &.to_i || 10
 end
 ```
 
