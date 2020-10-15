@@ -10,7 +10,7 @@ module RethinkORM
       setting password : String = ENV["RETHINKDB_PASSWORD"]? || ""
       setting retry_interval : Time::Span = (ENV["RETHINKDB_TIMEOUT"]? || 2).to_i.seconds
       # Driver level reconnection attempts
-      setting retry_attempts : Int32? = ENV["RETHINKDB_RETRIES"]?.try &.to_i
+      setting retry_attempts : Int32? = ENV["RETHINKDB_RETRIES"]?.try(&.to_i) || 10
       # ORM level query retries
       setting query_retries : Int32 = ENV["RETHINKDB_QUERY_RETRIES"]?.try &.to_i || 10
       setting lock_expire : Time::Span = (ENV["RETHINKDB_LOCK_EXPIRE"]? || 30).to_i.seconds

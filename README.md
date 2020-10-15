@@ -32,7 +32,7 @@ RethinkORM::Settings.configure do |settings|
   settings.retry_interval = (ENV["RETHINKDB_TIMEOUT"]? || 2).to_i.seconds
 
   # Driver level reconnection attempts
-  settings.retry_attempts = ENV["RETHINKDB_RETRIES"]?.try &.to_i
+  settings.retry_attempts = ENV["RETHINKDB_RETRIES"]?.try(&.to_i) || 10
 
   # ORM level query retries
   settings.query_retries = ENV["RETHINKDB_QUERY_RETRIES"]?.try &.to_i || 10
