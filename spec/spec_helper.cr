@@ -8,8 +8,11 @@ require "./spec_models"
 
 DB_NAME = "test_#{Time.utc.to_unix}_#{rand(10000)}"
 
-RethinkORM.configure do |settings|
-  settings.db = DB_NAME
+Spec.before_suite do
+  RethinkORM.configure do |settings|
+    settings.db = DB_NAME
+  end
+  ::Log.setup("*", level: :debug)
 end
 
 Spec.after_suite do
