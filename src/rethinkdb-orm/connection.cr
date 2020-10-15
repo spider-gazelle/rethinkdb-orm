@@ -3,6 +3,7 @@ require "habitat"
 require "mutex"
 require "rethinkdb"
 
+require "./error"
 require "./settings"
 
 module RethinkORM
@@ -10,6 +11,8 @@ module RethinkORM
     extend Settings
 
     private alias R = RethinkDB
+
+    Log = ::Log.for(self)
 
     @@resource_check = false
     @@resource_lock = Mutex.new
@@ -22,15 +25,27 @@ module RethinkORM
         if @@resource_check && @@db
           @@db.as(RethinkDB::Connection)
         else
-          connection = RethinkDB::Connection.new(
-            host: settings.host,
-            port: settings.port,
-            db: settings.db,
-            user: settings.user,
-            password: settings.password,
-            max_retry_interval: settings.retry_interval,
-            max_retry_attempts: settings.retry_attempts,
-          )
+          begin
+            connection = Retriable.retry(
+              max_attempts: settings.retry_attempts,
+              on: Socket::ConnectError,
+              on_retry: ->(_e : Exception, attempt : Int32, _t : Time::Span, _i : Time::Span) {
+                Log.warn { "attempt #{attempt} connecting to #{settings.host}:#{settings.port}" }
+              }
+            ) do
+              RethinkDB::Connection.new(
+                host: settings.host,
+                port: settings.port,
+                db: settings.db,
+                user: settings.user,
+                password: settings.password,
+                max_retry_interval: settings.retry_interval,
+                max_retry_attempts: settings.retry_attempts,
+              )
+            end
+          rescue e : Socket::ConnectError
+            raise Error::ConnectError.new("failed to connect to #{settings.host}:#{settings.port} after #{settings.retry_attempts} retries")
+          end
 
           ensure_resources!(connection)
           @@db = connection
@@ -46,7 +61,13 @@ module RethinkORM
     # The block defined query is run and raw results returned.
     def self.raw(**options)
       query = yield R
-      Retriable.retry(max_attempts: settings.query_retries, on: IO::Error) do
+      Retriable.retry(
+        max_attempts: settings.query_retries,
+        on: IO::Error,
+        on_retry: ->(_e : Exception, attempt : Int32, _t : Time::Span, _i : Time::Span) {
+          Log.warn { "attempt #{attempt} retrying query" }
+        }
+      ) do
         query.run(self.db, **options)
       end
     end
