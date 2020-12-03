@@ -6,6 +6,14 @@ require "rethinkdb"
 require "./error"
 require "./settings"
 
+module RethinkDB
+  class Connection
+    def closed?
+      sock.closed?
+    end
+  end
+end
+
 module RethinkORM
   class Connection
     extend Settings
@@ -19,39 +27,37 @@ module RethinkORM
     @@db : RethinkDB::Connection? = nil
 
     def self.db
-      @@db.as(RethinkDB::Connection) unless @@db.nil?
-
       @@resource_lock.synchronize {
-        if @@resource_check && @@db
-          @@db.as(RethinkDB::Connection)
-        else
-          begin
-            connection = Retriable.retry(
-              max_attempts: settings.retry_attempts,
-              on: Socket::ConnectError,
-              on_retry: ->(_e : Exception, attempt : Int32, _t : Time::Span, _i : Time::Span) {
-                Log.warn { "attempt #{attempt} connecting to #{settings.host}:#{settings.port}" }
-              }
-            ) do
-              RethinkDB::Connection.new(
-                host: settings.host,
-                port: settings.port,
-                db: settings.db,
-                user: settings.user,
-                password: settings.password,
-                max_retry_interval: settings.retry_interval,
-                max_retry_attempts: settings.retry_attempts,
-              )
-            end
-          rescue e : Socket::ConnectError
-            raise Error::ConnectError.new("failed to connect to #{settings.host}:#{settings.port} after #{settings.retry_attempts} retries")
+        connection = @@db
+        return connection if @@resource_check && connection && !connection.closed?
+
+        begin
+          connection = Retriable.retry(
+            max_attempts: settings.retry_attempts,
+            on: Socket::ConnectError,
+            on_retry: ->(_e : Exception, attempt : Int32, _t : Time::Span, _i : Time::Span) {
+              Log.warn { "attempt #{attempt} connecting to #{settings.host}:#{settings.port}" }
+            }
+          ) do
+            RethinkDB::Connection.new(
+              host: settings.host,
+              port: settings.port,
+              db: settings.db,
+              user: settings.user,
+              password: settings.password,
+              max_retry_interval: settings.retry_interval,
+              max_retry_attempts: settings.retry_attempts,
+            )
           end
-
-          ensure_resources!(connection)
-          @@db = connection
-
-          connection
+        rescue e : Socket::ConnectError
+          raise Error::ConnectError.new("failed to connect to #{settings.host}:#{settings.port} after #{settings.retry_attempts} retries")
         end
+
+        @@db = connection
+
+        ensure_resources!(connection)
+
+        connection
       }
     end
 
