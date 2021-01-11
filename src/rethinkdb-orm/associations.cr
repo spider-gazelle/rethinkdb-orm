@@ -2,44 +2,46 @@ require "./utils/association_collection"
 
 module RethinkORM::Associations
   # Defines getter and setter for parent relationship
-  macro belongs_to(parent_class, dependent = :none, create_index = true, association_name = nil, foreign_key = nil, foreign_key_type = nil, presence = false)
-    {% parent_name = association_name || parent_class.id.stringify.underscore.downcase.gsub(/::/, "_") %}
-    {% foreign_key = (foreign_key || "#{parent_name.id}_id").id %}
-    {% association_method = parent_name.id.symbolize %}
-    {% assoc_var = "__#{parent_name.id}".id %}
+  macro belongs_to(assoc, dependent = :none, create_index = true, foreign_key = nil, foreign_type = nil, primary_key = nil, presence = false)
+    {% method_name = assoc.var %}
+    {% class_name = assoc.type %}
+    {% foreign_key ||= method_name.id + "_id" %}
+    {% foreign_type ||= String %}
+    {% primary_key ||= "id".id %}
+    {% assoc_var = "__#{foreign_key.id}".id %}
 
-    attribute {{ foreign_key.id }} : {{ foreign_key_type || String }} {% unless presence %} | Nil {% end %}, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
-    property {{ assoc_var }} : {{ parent_class }}?
-    destroy_callback({{ association_method }}, {{dependent}})
+    attribute {{ foreign_key.id }} : {{ foreign_type }} {% unless presence %} | Nil {% end %}, parent: {{ class_name.id.stringify }}, es_type: "keyword"
+    property {{ assoc_var }} : {{ class_name }}?
+    destroy_callback({{ foreign_key.id.symbolize }}, {{dependent}})
 
     {% if create_index %}
       secondary_index({{ foreign_key.id }})
     {% end %}
 
     # Retrieves the parent relationship
-    def {{ parent_name.id }} : {{ parent_class }}?
+    def {{ method_name.id }} : {{ class_name }}?
       parent = @{{ assoc_var }}
-      key = self.{{ foreign_key }}
+      key = self.{{ foreign_key.id }}
 
       return parent if parent
 
-      self.{{ assoc_var }} = key ? {{ parent_class }}.find(key) : nil
+      self.{{ assoc_var }} = key ? {{ class_name }}.find(key) : nil
     end
 
-    def {{ parent_name.id }}! : {{ parent_class }}
+    def {{ method_name.id }}! : {{ class_name }}
       parent = @{{ assoc_var }}
-      key = self.{{ foreign_key }}
+      key = self.{{ foreign_key.id }}
 
       return parent if parent
-      raise RethinkORM::Error.new("No {{ foreign_key }} set") unless key
+      raise RethinkORM::Error.new("No {{ foreign_key.id }} set") unless key
 
-      self.{{ assoc_var }} = {{ parent_class }}.find!(key)
+      self.{{ assoc_var }} = {{ class_name }}.find!(key)
     end
 
     # Sets the parent relationship
-    def {{ parent_name.id }}=(parent : {{ parent_class }})
+    def {{ method_name.id }}=(parent : {{ class_name }})
       self.{{ assoc_var }} = parent
-      self.{{ foreign_key.id }} = parent.id.as({{ foreign_key_type || String }})
+      self.{{ foreign_key.id }} = parent.{{ primary_key.id }}.as({{ foreign_type }})
     end
 
     def reset_associations
@@ -51,47 +53,48 @@ module RethinkORM::Associations
       if self.has_index?({{ foreign_key.id.stringify }})
         self.get_all([id], index: {{ foreign_key.id.stringify }})
       else
-        self.where({{ foreign_key }}: id)
+        self.where({{ foreign_key.id }}: id)
       end
     end
   end
 
-  macro has_one(child_class, dependent = :none, create_index = false, association_name = nil, foreign_key_type = nil, presence = false)
-    {% child = association_name || child_class.id.underscore.downcase.gsub(/::/, "_") %}
-    {% assoc_var = "__#{child.id}".id %}
-    {% foreign_key = child + "_id" %}
-    {% association_method = child.id.symbolize %}
+  macro has_one(assoc, dependent = :none, create_index = false, foreign_key = nil, foreign_type = nil, primary_key = nil, presence = false)
+    {% method_name = assoc.var %}
+    {% class_name = assoc.type %}
+    {% foreign_key ||= method_name.id + "_id" %}
+    {% foreign_type ||= String %}
+    {% primary_key ||= "id".id %}
+    {% assoc_var = "__#{foreign_key.id}".id %}
 
-    attribute {{ foreign_key.id }} : {{ foreign_key_type || String }} {% unless presence %} | Nil {% end %}
-    property {{ assoc_var }} : {{ child_class }}?
-    destroy_callback({{ association_method }}, {{dependent}})
+    attribute {{ foreign_key.id }} : {{ foreign_type }} {% unless presence %} | Nil {% end %}
+    property {{ assoc_var }} : {{ class_name }}?
+    destroy_callback({{ foreign_key.id.symbolize }}, {{dependent}})
 
     {% if create_index %}
       secondary_index({{ foreign_key.id }})
     {% end %}
 
-    # Get cached child or attempt to load an associated {{child.id}}
-    def {{ child.id }} : {{ child_class }}?
+    # Get cached child or attempt to load an associated {{method_name.id}}
+    def {{ method_name.id }} : {{ class_name }}?
       key = self.{{ foreign_key.id }}
       child = @{{ assoc_var }}
       return child unless child.nil?
 
-      self.{{ assoc_var }} = key && !key.empty? ? {{ child_class }}.find(key)
-                                                : nil
+      self.{{ assoc_var }} = key {% if foreign_type == String %}&& !key.empty?{% end %} ? {{ class_name }}.find(key) : nil
     end
 
-    def {{ child.id }}! : {{ child_class }}
+    def {{ method_name.id }}! : {{ class_name }}
       key = self.{{ foreign_key.id }}
       child = @{{ assoc_var }}
       return child unless child.nil?
       raise RethinkORM::Error.new("No {{ foreign_key.id }} set") unless key
 
-      self.{{ assoc_var }} = {{ child_class }}.find!(key)
+      self.{{ assoc_var }} = {{ class_name }}.find!(key)
     end
 
-    def {{ child.id }}=(child)
+    def {{ method_name.id }}=(child)
       self.{{ assoc_var }} = child
-      self.{{ foreign_key.id }} = child.id
+      self.{{ foreign_key.id }} = child.{{ primary_key.id }}
     end
 
     def reset_associations
