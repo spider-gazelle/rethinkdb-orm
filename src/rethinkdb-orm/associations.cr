@@ -2,13 +2,13 @@ require "./utils/association_collection"
 
 module RethinkORM::Associations
   # Defines getter and setter for parent relationship
-  macro belongs_to(parent_class, dependent = :none, create_index = true, association_name = nil, foreign_key = nil, presence = false)
+  macro belongs_to(parent_class, dependent = :none, create_index = true, association_name = nil, foreign_key = nil, foreign_key_type = nil, presence = false)
     {% parent_name = association_name || parent_class.id.stringify.underscore.downcase.gsub(/::/, "_") %}
     {% foreign_key = (foreign_key || "#{parent_name.id}_id").id %}
     {% association_method = parent_name.id.symbolize %}
     {% assoc_var = "__#{parent_name.id}".id %}
 
-    attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
+    attribute {{ foreign_key.id }} : {{ foreign_key_type || String }} {% unless presence %} | Nil {% end %}, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
     property {{ assoc_var }} : {{ parent_class }}?
     destroy_callback({{ association_method }}, {{dependent}})
 
@@ -39,7 +39,7 @@ module RethinkORM::Associations
     # Sets the parent relationship
     def {{ parent_name.id }}=(parent : {{ parent_class }})
       self.{{ assoc_var }} = parent
-      self.{{ foreign_key.id }} = parent.id.as(String)
+      self.{{ foreign_key.id }} = parent.id.as({{ foreign_key_type || String }})
     end
 
     def reset_associations
@@ -56,13 +56,13 @@ module RethinkORM::Associations
     end
   end
 
-  macro has_one(child_class, dependent = :none, create_index = false, association_name = nil, presence = false)
+  macro has_one(child_class, dependent = :none, create_index = false, association_name = nil, foreign_key_type = nil, presence = false)
     {% child = association_name || child_class.id.underscore.downcase.gsub(/::/, "_") %}
     {% assoc_var = "__#{child.id}".id %}
     {% foreign_key = child + "_id" %}
     {% association_method = child.id.symbolize %}
 
-    attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}
+    attribute {{ foreign_key.id }} : {{ foreign_key_type || String }} {% unless presence %} | Nil {% end %}
     property {{ assoc_var }} : {{ child_class }}?
     destroy_callback({{ association_method }}, {{dependent}})
 
