@@ -10,9 +10,8 @@ dependencies:
     github: spider-gazelle/active-model
     version: ~> 2
   async:
-    # github: protoncr/async
-    # branch: main
-    path: ../../personal/async
+    github: protoncr/async
+    version: ~> 0.1
   habitat:
     github: luckyframework/habitat
   rethinkdb:
