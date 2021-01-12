@@ -24,3 +24,5 @@ development_dependencies:
     github: crystal-ameba/ameba
   faker:
     github: askn/faker
+  timecop:
+    github: crystal-community/timecop.cr
