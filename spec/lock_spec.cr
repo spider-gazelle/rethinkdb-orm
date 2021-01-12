@@ -1,4 +1,6 @@
+require "timecop"
 require "uuid"
+
 require "./spec_helper"
 
 module RethinkORM
@@ -132,8 +134,9 @@ module RethinkORM
       id = UUID.random.to_s
       lock1 = Lock.new(id)
 
-      lock1.lock(expire: 0.1.seconds)
-      sleep 0.1
+      Timecop.freeze(2.seconds.ago) do
+        lock1.lock(expire: 0.1.seconds)
+      end
       expired_lock = Lock.expired.first
       expired_lock.lock
       expect_raises(Error::LockLost) { lock1.refresh }
@@ -299,8 +302,10 @@ module RethinkORM
       id = UUID.random.to_s
       lock1 = Lock::Reentrant.new(key: id, instance_token: "hello")
 
-      lock1.lock(expire: 0.1.seconds)
-      sleep 0.1
+      Timecop.freeze(2.seconds.ago) do
+        lock1.lock(expire: 0.1.seconds)
+      end
+
       expired_lock = Lock::Reentrant.expired.first
       expired_lock.lock
       expect_raises(Error::LockLost) { lock1.refresh }

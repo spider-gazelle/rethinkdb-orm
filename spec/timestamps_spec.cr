@@ -1,3 +1,5 @@
+require "timecop"
+
 require "./spec_helper"
 
 describe RethinkORM::Timestamps do
@@ -13,13 +15,14 @@ describe RethinkORM::Timestamps do
   end
 
   it "sets updated_at upon update" do
-    model = Timo.create!(name: "Timooooo")
+    model = Timo.new(name: "Timooooo")
+    Timecop.freeze(1.day.ago) do
+      model.save!
+    end
 
     model.created_at.should be_a(Time)
     model.updated_at.should be_a(Time)
     model.created_at.should eq model.updated_at
-
-    sleep 2
 
     model.name = "Timooooo?"
     model.save
