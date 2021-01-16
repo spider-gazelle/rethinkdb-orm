@@ -183,7 +183,7 @@ module RethinkORM::Persistence
         response = Connection.raw_json(self.to_json) do |q, doc|
           q.table(@@table_name)
             .get(@id)
-            .update(doc, **options)
+            .replace(doc, **options) # Replace allows fields to be set to null
         end
 
         # TODO: Extend active-model to include previous changes
@@ -205,6 +205,7 @@ module RethinkORM::Persistence
   protected def __create(**options)
     run_create_callbacks do
       run_save_callbacks do
+        pp self
         return false unless valid?
 
         # TODO: Allow user to tag an attribute as primary key.

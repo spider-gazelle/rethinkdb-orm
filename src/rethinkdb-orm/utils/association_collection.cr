@@ -1,14 +1,17 @@
 require "../index"
 
 class RethinkORM::AssociationCollection(Owner, Target)
+  include Enumerable(Target)
+
   private getter owner : Owner
   private getter foreign_key : String
 
   delegate :find, :find!, to: Target
-  forward_missing_to all
+
+  delegate :each, to: :all
 
   def initialize(@owner, foreign_key = nil)
-    @foreign_key = !foreign_key ? "#{Owner.table_name}_id" : foreign_key
+    @foreign_key = !foreign_key ? "#{Owner.table_name}_id" : foreign_key.to_s
   end
 
   def all
