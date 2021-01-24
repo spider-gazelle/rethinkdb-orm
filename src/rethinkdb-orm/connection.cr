@@ -74,7 +74,12 @@ module RethinkORM
           Log.warn { "attempt #{attempt} retrying query" }
         }
       ) do
-        query.run(self.db, **options)
+        Log.with_context do
+          reql = query.to_reql
+          Log.context.set(db: self.db.hash.to_s, type: query.class.to_s, query: reql.to_s)
+          Log.debug { "Running query" }
+          query.run(self.db, **options)
+        end
       end
     end
 

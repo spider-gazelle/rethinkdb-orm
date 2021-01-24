@@ -72,6 +72,30 @@ module RethinkORM::Queries
       self.from_trusted_json(result.to_json) unless result.raw.nil?
     end
 
+    def self.find_one!(attrs : Hash, **options)
+      document = find_one(attrs, **options)
+      raise RethinkORM::Error::DocumentNotFound.new("Attributes don't match document: #{attrs}") unless document
+      document
+    end
+
+    def self.find_one(attrs : Hash, **options)
+      result = table_query(**options) do |q|
+        q.filter(attrs).coerce_to("array").nth(0)
+      end
+
+      self.from_trusted_json(result.to_json) unless result.raw.nil?
+    rescue
+      nil
+    end
+
+    def self.find_one(**attrs)
+      find_one(attrs.to_h)
+    end
+
+    def self.find_one!(**attrs)
+      find_one!(attrs.to_h)
+    end
+
     # Look up document by id
     #
     def self.find_all(ids : Array | Tuple, **options)

@@ -2,52 +2,62 @@ require "rethinkdb"
 
 module RethinkORM
   class Collection(T)
-    include Iterator(T)
-    include Iterator::IteratorWrapper
+    include Enumerable(T)
 
-    @iterator : Iterator(RethinkDB::QueryResult)
+    delegate :each, to: @iterator
 
     def initialize(iterator : Iterator(RethinkDB::QueryResult) | RethinkDB::QueryResult)
-      @iterator = iterator.is_a?(Iterator) ? iterator : iterator.as_a.each
+      @iterator = Iter(T).new(iterator)
     end
 
-    @atom_response : Iterator(T)? = nil
+    class Iter(T)
+      include Iterator(T)
+      include Iterator::IteratorWrapper
 
-    def next
-      result = if (iter = @atom_response)
-                 iter.next
-               else
-                 wrapped_next
-               end
+      @iterator : Iterator(RethinkDB::QueryResult)
 
-      if result == Iterator::Stop::INSTANCE
-        stop
-      elsif result.is_a?(T)
-        result
-      else
-        begin
-          T.from_trusted_json result.as(RethinkDB::QueryResult).to_json
-        rescue e : JSON::MappingError
-          if e.message.try &.includes?("Expected BeginObject but was BeginArray")
-            atom_iterator = result.as(RethinkDB::QueryResult)
-              .as_a
-              .map(&.to_json)
-              .map(&->T.from_trusted_json(String))
-              .each
+      def initialize(iterator : Iterator(RethinkDB::QueryResult) | RethinkDB::QueryResult)
+        @iterator = iterator.is_a?(Iterator) ? iterator : iterator.as_a.each
+      end
 
-            @atom_response = atom_iterator
+      @atom_response : Iterator(T)? = nil
 
-            atom_iterator.next
-          else
-            raise e
+      def next
+        result = if (iter = @atom_response)
+                    iter.next
+                  else
+                    wrapped_next
+                  end
+
+        if result == Iterator::Stop::INSTANCE
+          stop
+        elsif result.is_a?(T)
+          result
+        else
+          begin
+            T.from_trusted_json result.as(RethinkDB::QueryResult).to_json
+          rescue e : JSON::MappingError
+            if e.message.try &.includes?("Expected BeginObject but was BeginArray")
+              atom_iterator = result.as(RethinkDB::QueryResult)
+                .as_a
+                .map(&.to_json)
+                .map(&->T.from_trusted_json(String))
+                .each
+
+              @atom_response = atom_iterator
+
+              atom_iterator.next
+            else
+              raise e
+            end
           end
         end
       end
-    end
 
-    def stop
-      @iterator.stop
-      super
+      def stop
+        @iterator.stop
+        super
+      end
     end
   end
 end

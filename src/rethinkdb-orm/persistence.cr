@@ -190,7 +190,7 @@ module RethinkORM::Persistence
         response = Connection.raw_json(self.to_json) do |q, doc|
           q.table(@@table_name)
             .get(@id)
-            .update(doc, **options)
+            .replace(doc, **options) # Replace allows fields to be set to null
         end
 
         # TODO: Extend active-model to include previous changes
