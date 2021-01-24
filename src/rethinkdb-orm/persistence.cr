@@ -205,7 +205,6 @@ module RethinkORM::Persistence
   protected def __create(**options)
     run_create_callbacks do
       run_save_callbacks do
-        pp self
         return false unless valid?
 
         # TODO: Allow user to tag an attribute as primary key.
