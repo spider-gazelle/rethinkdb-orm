@@ -9,8 +9,9 @@ dependencies:
   active-model:
     github: spider-gazelle/active-model
     version: ~> 2
-  future:
-    github: crystal-community/future.cr
+  async:
+    github: protoncr/async
+    version: ~> 0.1
   habitat:
     github: luckyframework/habitat
   rethinkdb:

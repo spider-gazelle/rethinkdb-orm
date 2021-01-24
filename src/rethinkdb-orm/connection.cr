@@ -1,4 +1,4 @@
-require "future"
+require "async"
 require "habitat"
 require "mutex"
 require "rethinkdb"
@@ -111,7 +111,7 @@ module RethinkORM
 
       # Create tables and indexes
       table_queries = table_queries.map do |table, table_creation, index_creation|
-        future {
+        Async::Future.execute {
           begin
             table_creation.run(connection)
           rescue e : RethinkDB::ReqlOpFailedError
@@ -120,20 +120,24 @@ module RethinkORM
 
           fix_duplicate_table_query(table).run(connection)
 
-          index_creation.try &.map do |create, wait|
-            begin
-              create.run(connection)
-            rescue e : RethinkDB::ReqlOpFailedError
-              # Ignore index already exists error
-              raise e unless e.message.try &.includes?("already exists")
+          if ic = index_creation
+            futures = ic.map do |create, wait|
+              begin
+                create.run(connection)
+              rescue e : RethinkDB::ReqlOpFailedError
+                # Ignore index already exists error
+                raise e unless e.message.try &.includes?("already exists")
+              end
+
+              Async::Future.execute { wait.run(connection) }
             end
 
-            future { wait.run(connection) }
-          end.each(&.get)
+            Async::Future.all(futures, ordered: false)
+          end
         }
       end
 
-      table_queries.each(&.get)
+      Async::Future.all(table_queries, ordered: false)
 
       # TODO: Error check
       @@resource_check = true
