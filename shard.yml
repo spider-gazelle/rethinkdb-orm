@@ -1,7 +1,7 @@
 name: rethinkdb-orm
-version: 3.2.4
+version: 4.0.0
 license: MIT
-crystal: ">= 0.36.1"
+crystal: ~> 1
 
 authors:
   - Caspian Baska <caspian@place.technology>
@@ -9,7 +9,7 @@ authors:
 dependencies:
   active-model:
     github: spider-gazelle/active-model
-    version: ~> 2
+    version: ~> 3
   future:
     github: crystal-community/future.cr
   habitat:
