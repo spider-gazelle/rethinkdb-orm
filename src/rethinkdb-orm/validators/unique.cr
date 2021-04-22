@@ -51,7 +51,7 @@ module RethinkORM::Validators
         {% if scope.size == 1 %}
           # Utilise generated secondary index
           {% if create_index %}
-            doc = self.get_all([result], index: {{ field.id.stringify }}).first?
+            doc = self.find_all([result], index: {{ field.id.stringify }}).first?
           {% else %}
             doc = self.where({{field.id}}: result).first?
           {% end %}
