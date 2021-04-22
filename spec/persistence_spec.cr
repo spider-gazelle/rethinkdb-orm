@@ -35,6 +35,7 @@ describe RethinkORM::Persistence do
     model = BasicModel.new
     model.name = "bob"
     model.age = 34
+    model.hash = {"hello" => "world"}
     model.save
 
     model.new_record?.should be_false
@@ -43,7 +44,14 @@ describe RethinkORM::Persistence do
 
     model.name.should eq "bob"
     model.age.should eq 34
+    model.hash.should eq({"hello" => "world"})
     model.@address.should be_nil
+
+    model.hash = {"world" => "hello"}
+    model.save
+
+    model.reload!
+    model.hash.should eq({"world" => "hello"})
 
     model.destroy
     model.destroyed?.should be_true
