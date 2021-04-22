@@ -1,0 +1,21 @@
+name: CI
+on: [push, workflow_dispatch]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: oprypin/install-crystal@v1
+        with:
+          crystal: latest
+      - uses: actions/checkout@v2
+      - run: docker run -p 29015:29015 -p 28015:28015 -d rethinkdb:2.4
+      - name: Crystal Format
+        run: crystal tool format --check
+      - name: Crystal Ameba Linter
+        uses: crystal-ameba/github-action@v0.2.12
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: shards install --ignore-crystal-version
+      - run: crystal spec -v --error-trace
