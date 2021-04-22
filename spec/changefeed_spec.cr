@@ -7,7 +7,7 @@ module RethinkORM
       coordination = Channel(Nil).new
       changefeed = BasicModel.changes(base.id)
       events = [] of RethinkORM::Changefeed::Event
-      changes = [] of Hash(Symbol, String | Int32 | Nil)
+      changes = [] of Hash(Symbol, String | Int32 | Hash(String, String) | Nil)
 
       spawn do
         changefeed.each do |change|

@@ -7,6 +7,7 @@ class BasicModel < RethinkORM::Base
   attribute name : String
   attribute address : String?
   attribute age : Int32 = 0
+  attribute hash : Hash(String, String) = {} of String => String
 end
 
 class ModelWithDefaults < RethinkORM::Base
