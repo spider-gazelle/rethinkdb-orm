@@ -1,6 +1,6 @@
 # RethinkDB ORM for Crystal Lang
 
-[![Build Status](https://travis-ci.org/spider-gazelle/rethinkdb-orm.svg?branch=master)](https://travis-ci.org/spider-gazelle/rethinkdb-orm)
+[![CI](https://github.com/spider-gazelle/rethinkdb-orm/actions/workflows/ci.yml/badge.svg)](https://github.com/spider-gazelle/rethinkdb-orm/actions/workflows/ci.yml)
 
 Extending [ActiveModel](https://github.com/spider-gazelle/active-model) for attribute definitions, callbacks and validations
 
