@@ -49,7 +49,7 @@ module RethinkORM::Associations
     # Look up instances of this model dependent on the foreign key
     def self.by_{{ foreign_key.id }}(id)
       if self.has_index?({{ foreign_key.id.stringify }})
-        self.get_all([id], index: {{ foreign_key.id.stringify }})
+        self.find_all([id], index: {{ foreign_key.id.stringify }})
       else
         self.where({{ foreign_key }}: id)
       end

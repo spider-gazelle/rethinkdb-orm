@@ -72,20 +72,20 @@ module RethinkORM::Queries
       self.from_trusted_json(result.to_json) unless result.raw.nil?
     end
 
-    # Look up document by id
-    #
-    def self.find_all(ids : Array | Tuple, **options)
-      get_all(ids, **options)
-    end
-
     # Query by ids, optionally set a secondary index
     #
-    def self.get_all(values : Array | Tuple, **options)
+    def self.find_all(ids : Array | Tuple, **options)
       cursor = table_query do |q|
-        q.get_all(values, **options)
+        q.get_all(ids, **options)
       end
 
       Collection(self).new(cursor)
+    end
+
+    @[Deprecated("Use `.find_all` instead.")]
+    # :ditto:
+    def self.get_all(values : Array | Tuple, **options)
+      find_all(values, **options)
     end
 
     # Check for document presence in the table
@@ -100,12 +100,14 @@ module RethinkORM::Queries
 
     # Returns documents with columns matching the given criteria
     #
+    @[Deprecated("Use `.where` instead.")]
     def self.find_by(**attribute)
       where(**attribute)
     end
 
 
     # :ditto:
+    @[Deprecated("Use `.where` instead.")]
     def self.find_by(**attribute, &predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
       where(**attribute, &predicate)
     end
@@ -126,6 +128,13 @@ module RethinkORM::Queries
       Collection(self).new(cursor)
     end
 
+    # Returns documents containing fields that match the attributes
+    #
+    def self.where(**attrs)
+      where(attrs.to_h)
+    end
+
+    # :ditto:
     def self.where(attrs : Hash, **options)
       cursor = table_query(**options) do |q|
         q.filter(attrs)
@@ -157,12 +166,6 @@ module RethinkORM::Queries
         yield q
       end
       Collection(self).new(cursor)
-    end
-
-    # Returns documents containing fields that match the attributes
-    #
-    def self.where(**attrs)
-      where(attrs.to_h)
     end
 
     # Returns a count of all documents in the table

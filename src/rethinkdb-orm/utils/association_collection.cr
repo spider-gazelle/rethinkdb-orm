@@ -13,7 +13,7 @@ class RethinkORM::AssociationCollection(Owner, Target)
 
   def all
     if Target.has_index?(foreign_key)
-      Target.get_all([owner.id.as(String)], index: foreign_key)
+      Target.find_all([owner.id.as(String)], index: foreign_key)
     else
       Target.where({"#{foreign_key}" => owner.id.as(String)})
     end
