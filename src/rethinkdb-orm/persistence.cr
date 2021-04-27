@@ -67,6 +67,11 @@ module RethinkORM::Persistence
     end
   end
 
+  protected def custom_id(id : String)
+    self._new_flag = true
+    @id = id
+  end
+
   # Saves the model.
   #
   # If the model is new, a record gets created in the database, otherwise
