@@ -1,6 +1,7 @@
 # RethinkDB ORM for Crystal Lang
 
 [![CI](https://github.com/spider-gazelle/rethinkdb-orm/actions/workflows/ci.yml/badge.svg)](https://github.com/spider-gazelle/rethinkdb-orm/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/badge/Documentation-available-brightgreen.svg)](https://spider-gazelle.github.io/rethinkdb-orm)
 
 Extending [ActiveModel](https://github.com/spider-gazelle/active-model) for attribute definitions, callbacks and validations
 
