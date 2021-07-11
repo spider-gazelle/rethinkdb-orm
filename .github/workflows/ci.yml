@@ -44,19 +44,19 @@ jobs:
         run: crystal spec --error-trace -v --order=random --no-color -Dpreview_mt
 
   publish:
-    if: contains('refs/heads/master', github.ref)
+    if: contains('refs/tags', github.ref)
     runs-on: ubuntu-latest
     container: crystallang/crystal:latest
     steps:
       - uses: actions/checkout@v2
       - run: shards install --ignore-crystal-version
       - name: Run `crystal docs`
-        run: crystal docs
+        run: crystal docs --source-url-pattern=https://github.com/spider-gazelle/rethinkdb-orm/tree/$(shards version)
       - name: Publish to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: docs
           build_dir: docs
-          commit_message: "docs: update for ${{ github.sha }}"
+          commit_message: "docs: update for ${{ github.ref }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
