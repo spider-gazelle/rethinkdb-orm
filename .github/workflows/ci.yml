@@ -1,21 +1,63 @@
 name: CI
-on: [push, workflow_dispatch]
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * 0" # Every Sunday at midnight
+
 jobs:
-  test:
-    strategy:
-      fail-fast: false
+  style:
     runs-on: ubuntu-latest
+    container: crystallang/crystal:latest
     steps:
-      - uses: oprypin/install-crystal@v1
-        with:
-          crystal: latest
       - uses: actions/checkout@v2
-      - run: docker run -p 29015:29015 -p 28015:28015 -d rethinkdb:2.4
-      - name: Crystal Format
+      - name: Format
         run: crystal tool format --check
-      - name: Crystal Ameba Linter
+      - name: Lint
         uses: crystal-ameba/github-action@v0.2.12
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crystal:
+          - latest
+          - nightly
+          - 1.0.0
+    services:
+      rethink:
+        image: rethinkdb:2.4
+        ports:
+          - 29015:29015
+          - 28015:28015
+    steps:
+      - uses: actions/checkout@v2
+      - uses: oprypin/install-crystal@v1
+        with:
+          crystal: ${{ matrix.crystal }}
       - run: shards install --ignore-crystal-version
-      - run: crystal spec -v --error-trace
+      - name: Tests
+        run: crystal spec --error-trace -v --order=random --no-color
+      - name: Tests Multithreaded
+        run: crystal spec --error-trace -v --order=random --no-color -Dpreview_mt
+
+  publish:
+    if: contains('refs/heads/master', github.ref)
+    needs: test
+    runs-on: ubuntu-latest
+    container: crystallang/crystal:latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: shards install --ignore-crystal-version
+      - name: Run `crystal docs`
+        run: crystal docs
+      - name: Publish to GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          target_branch: docs
+          build_dir: docs
+          commit_message: "docs: update for ${{ github.sha }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
