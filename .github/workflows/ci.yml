@@ -45,7 +45,6 @@ jobs:
 
   publish:
     if: contains('refs/heads/master', github.ref)
-    needs: test
     runs-on: ubuntu-latest
     container: crystallang/crystal:latest
     steps:
