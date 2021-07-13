@@ -11,8 +11,8 @@ module RethinkORM
 
       spawn do
         changefeed.each do |change|
-          events << change[:event]
-          changed = change[:value].try(&.changed_attributes)
+          events << change.event
+          changed = change.value.try(&.changed_attributes)
           changes << changed if changed
           coordination.send nil
           break
@@ -39,10 +39,10 @@ module RethinkORM
         changefeed.each.with_index do |change, index|
           case index
           when 0, 1, 2, 4, 5
-            events << change[:event]
-            names << change[:value].name
+            events << change.event
+            names << change.value.name
           when 3
-            events << change[:event]
+            events << change.event
             finished_channel.send nil
             break
           else
@@ -83,8 +83,8 @@ module RethinkORM
 
         spawn do
           changefeed.each do |change|
-            events << change[:event]
-            changed = change[:value]
+            events << change.event
+            changed = change.value
             documents << changed if changed
             coordination.send nil
             break
@@ -112,10 +112,10 @@ module RethinkORM
           changefeed.each.with_index do |change, index|
             case index
             when 0, 1, 2, 4, 5
-              events << change[:event]
-              documents << JSON.parse(change[:value]).as_h
+              events << change.event
+              documents << JSON.parse(change.value).as_h
             when 3
-              events << change[:event]
+              events << change.event
               finished_channel.send nil
             else
               raise "unexpected index #{index}"

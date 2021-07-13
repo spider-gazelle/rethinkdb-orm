@@ -1,4 +1,5 @@
 require "rethinkdb"
+require "json"
 
 module RethinkORM
   # Wraps the Changefeed iterator and parses events
@@ -10,6 +11,19 @@ module RethinkORM
       Created
       Updated
       Deleted
+    end
+
+    record(Change(T),
+      value : T,
+      event : Event,
+    ) do
+      include JSON::Serializable
+
+      {% for t in Event.constants.map(&.downcase) %}
+      def {{ t }}?
+        event.{{ t }}?
+      end
+      {% end %}
     end
 
     def initialize(@iterator : Iterator(RethinkDB::QueryResult))
@@ -45,18 +59,17 @@ module RethinkORM
       case {old_val, new_val}
       when {nil, _}
         model = T.from_trusted_json new_val.as(String)
-        {value: model, event: Event::Created}
+        Change.new(model, Event::Created)
       when {_, nil}
         model = T.from_trusted_json old_val.as(String)
         model.destroyed = true
-        {value: model, event: Event::Deleted}
+        Change.new(model, Event::Deleted)
       else
         # Create model from old value
         model = T.from_trusted_json old_val.as(String)
         model.clear_changes_information
         model.assign_attributes_from_trusted_json(new_val.as(String))
-
-        {value: model, event: Event::Updated}
+        Change.new(model, Event::Updated)
       end
     end
 
@@ -69,16 +82,15 @@ module RethinkORM
 
         case {old_val, new_val}
         when {nil, _}
-          {value: new_val.as(String), event: Event::Created}
+          Change(String).new(new_val.as(String), Event::Created)
         when {_, nil}
-          {value: old_val.as(String), event: Event::Deleted}
+          Change(String).new(old_val.as(String), Event::Deleted)
         else
           # Create object from old value
-          old_json = JSON.parse(old_val.as(String)).as_h
-          new_json = JSON.parse(new_val.as(String)).as_h
+          old_json = Hash(String, JSON::Any).from_json(old_val.as(String))
+          new_json = Hash(String, JSON::Any).from_json(new_val.as(String))
           json_with_updates = old_json.merge(new_json).to_json
-
-          {value: json_with_updates, event: Event::Updated}
+          Change(String).new(json_with_updates, Event::Updated)
         end
       end
     end
