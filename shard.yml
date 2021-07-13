@@ -1,8 +1,7 @@
 name: rethinkdb-orm
-version: 4.1.1
+version: 4.2.0
+crystal: ">= 1.0.0"
 license: MIT
-crystal: ~> 1
-
 authors:
   - Caspian Baska <caspian@place.technology>
 
