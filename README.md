@@ -160,7 +160,7 @@ ballgame = Game.create!(type: "footy")
 # Observe changes on a single document
 spawn do
   Game.changes(ballgame.id).each do |change|
-    game = change[:value]
+    game = change.value
     puts "looks like the score is #{game.score}" unless game.nil?
   end
 end
@@ -168,9 +168,9 @@ end
 # Observe changes on a table
 spawn do
   Game.changes.each do |change|
-    game = change[:value]
+    game = change.value
     puts "#{game.type}: #{game.score}" unless game.nil?
-    puts "game event: #{change[:event]}"
+    puts "game event: #{change.event}"
   end
 end
 ```
