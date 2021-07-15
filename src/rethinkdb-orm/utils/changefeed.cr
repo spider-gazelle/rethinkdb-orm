@@ -4,9 +4,6 @@ require "json"
 module RethinkORM
   # Wraps the Changefeed iterator and parses events
   class Changefeed(T)
-    include Iterator(T)
-    include Iterator::IteratorWrapper
-
     enum Event
       Created
       Updated
@@ -25,6 +22,9 @@ module RethinkORM
       end
       {% end %}
     end
+
+    include Iterator(Change(T))
+    include Iterator::IteratorWrapper
 
     def initialize(@iterator : Iterator(RethinkDB::QueryResult))
     end
