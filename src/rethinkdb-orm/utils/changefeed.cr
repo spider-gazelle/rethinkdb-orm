@@ -36,7 +36,7 @@ module RethinkORM
 
     def next
       result = wrapped_next
-      if result == Iterator::Stop::INSTANCE
+      if result.is_a? Iterator::Stop
         stop
       else
         parse_changes result
