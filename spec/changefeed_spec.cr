@@ -74,7 +74,7 @@ module RethinkORM
 
     describe Changefeed::Raw do
       it "should iterate raw changes on a document" do
-        base = BasicModel.create!(name: "ren")
+        base = BasicModel.create!(name: "ren", hash: {"foo" => "bar"})
         coordination = Channel(Nil).new
         changefeed = BasicModel.raw_changes(base.id)
 
@@ -92,6 +92,9 @@ module RethinkORM
         end
 
         base.name = "stimpy"
+        base.hash["foot"] = "foo"
+        base.hash.delete "foo"
+        base.hash_will_change!
         base.save
 
         updated_json = JSON.parse base.to_json
