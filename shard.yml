@@ -10,7 +10,7 @@ authors:
 dependencies:
   active-model:
     github: spider-gazelle/active-model
-    branch: json_yaml
+    branch: json-yaml-rebase
   future:
     github: crystal-community/future.cr
   habitat:
