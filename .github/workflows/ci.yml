@@ -23,13 +23,18 @@ jobs:
     name: "Test - crystal: ${{ matrix.crystal }}, MT: ${{ matrix.MT }}, stable: ${{ matrix.stable }}"
     continue-on-error: ${{ !matrix.stable }}
     strategy:
+      fail-fast: false
       matrix:
         crystal:
           - 1.0.0
+          - 1.1.1
         stable: [true]
         MT: [false]
         include:
           - crystal: 1.0.0
+            MT: true
+            stable: false
+          - crystal: 1.1.1
             MT: true
             stable: false
           - crystal: nightly
