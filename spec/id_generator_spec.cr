@@ -1,23 +1,38 @@
+require "base64"
+require "set"
 require "./spec_helper"
 
-describe RethinkORM::IdGenerator do
-  it "generates unique ids" do
-    id_channel = Channel(Array(String)).new
-    model = BasicModel.new
+describe RethinkORM::IdGenerator, focus: true do
+  model = BasicModel.new
 
-    10.times do
+  it "concats the table name with a 12 char base65 tail" do
+    id = RethinkORM::IdGenerator.next(model)
+    name, _, tail = id.partition '-'
+    name.should eq "basic_model"
+    tail.should match /^[0-9A-Za-z-_~]{12}$/
+  end
+
+  it "generates unique ids within a single fiber" do
+    seq = 10_000
+    ids = Set(String).new(initial_capacity: seq)
+    seq.times { ids << RethinkORM::IdGenerator.next(model) }
+    ids.size.should eq seq
+  end
+
+  it "generates unique ids across fibers" do
+    ch = Channel(Array(String)).new
+    seq = 1000
+    fib = 10
+
+    fib.times do
       spawn do
-        ids = [] of String
-        1000.times { ids << RethinkORM::IdGenerator.next(model) }
-        id_channel.send ids
+        ch.send Array.new(seq) { RethinkORM::IdGenerator.next(model) }
       end
     end
 
-    combined_ids = [] of String
-    10.times do
-      combined_ids += id_channel.receive
-    end
+    ids = Set(String).new
+    fib.times { ids.concat ch.receive }
 
-    combined_ids.uniq.size.should eq combined_ids.size
+    ids.size.should eq(fib * seq)
   end
 end
