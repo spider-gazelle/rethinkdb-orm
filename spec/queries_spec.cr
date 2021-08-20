@@ -78,6 +78,8 @@ describe RethinkORM::Queries do
     end
 
     it "tallys the documents with specific attributes" do
+      BasicModel.clear
+
       num_correct = 3
       num_incorrect = 4
       correct_name = Faker::Name.name
