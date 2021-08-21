@@ -5,7 +5,7 @@ require "time"
 #
 # Provides suitable performance with local, high-frequency batch insertions and
 # distributed operation will low collision probability. Generated ID's are in
-# the form `<prefix>-<postfix>` where prefix default to the table name and
+# the form `<prefix>-<postfix>` where prefix defaults to the table name and
 # postfix is a lexicographically sortable 10 character unique identifier.
 class RethinkORM::IdGenerator
   ENCODING = {
@@ -22,10 +22,10 @@ class RethinkORM::IdGenerator
   RAND_LEN = 30
   RAND_GEN = seq max: 2_u32**RAND_LEN
 
-  # Provides a pseudo-random sequence of non-repeating numbers.
+  # Provides a pseudo-random sequence of non-repeating positive integers.
   #
   # Internally this implements a maximal linear feedback shift register via
-  # Xorshift. For non-seeds this provides a cycle length of `2 ** 32 - 1`.
+  # Xorshift. For non-zero seeds this provides a cycle length of `2**32 - 1`.
   private class LSFR
     include Iterator(UInt32)
 
@@ -46,7 +46,7 @@ class RethinkORM::IdGenerator
   end
 
   # Provides a channel with an infinite stream of psuedo-random values up to
-  # *max* size and a garunteed cycle of at least *max* samples.
+  # *max* size and a guaranteed cycle of at least *max* samples.
   private def self.seq(max = UInt32::MAX, r = Random::DEFAULT)
     ch = Channel(UInt32).new
     spawn do
