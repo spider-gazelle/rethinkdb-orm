@@ -1,9 +1,11 @@
 name: rethinkdb-orm
-version: 5.0.0
+version: 5.0.1
 crystal: ">= 1.0.0"
 license: MIT
 authors:
   - Caspian Baska <caspian@place.technology>
+  - Kim Burgess <kim@place.technology>
+  - Stephen von Takach <steve@place.technology>
 
 dependencies:
   active-model:
