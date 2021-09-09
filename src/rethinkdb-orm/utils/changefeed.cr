@@ -30,7 +30,10 @@ module RethinkORM
     end
 
     def stop
-      @iterator.stop rescue Channel::ClosedError
+      begin
+        @iterator.stop
+      rescue Channel::ClosedError
+      end
       super
     end
 
