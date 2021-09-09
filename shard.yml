@@ -16,8 +16,9 @@ dependencies:
   habitat:
     github: luckyframework/habitat
   rethinkdb:
-    github: kingsleyh/crystal-rethinkdb
-    version: ~> 0.2
+    github: place-labs/crystal-rethinkdb
+    version: ~> 0.3
+    branch: fix/connection-retry
   retriable:
     github: Sija/retriable.cr
 
