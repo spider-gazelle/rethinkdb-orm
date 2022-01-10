@@ -59,7 +59,7 @@ jobs:
 
   publish:
     name: Publish Documentation
-    if: contains('refs/tags', github.ref)
+    if: contains(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
     container: crystallang/crystal:latest
     steps:
