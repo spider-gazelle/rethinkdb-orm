@@ -18,8 +18,8 @@ abstract class RethinkORM::Base < ActiveModel::Model
   include Associations
   include Index
   include Persistence
-  include Queries
   include Table
+  include Queries
   include Validators
 
   TABLES  = [] of String
