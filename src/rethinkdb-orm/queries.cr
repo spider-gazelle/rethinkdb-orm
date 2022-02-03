@@ -1,20 +1,23 @@
 require "retriable"
 
 require "./connection"
+require "./table"
 require "./utils/collection"
 require "./utils/changefeed"
 
 module RethinkORM::Queries
+  include RethinkORM::Table
+
   alias R = RethinkDB
   alias HasChanges = RethinkDB::DatumTerm | RethinkDB::RowTerm | RethinkDB::RowsTerm
 
   macro included
     # Cursor of each model in the database
     def self.all(**options)
-      cursor = Connection.raw(**options) do |q|
+      cursor = ::RethinkORM::Connection.raw(**options) do |q|
         q.table(table_name)
       end
-      Collection(self).new(cursor)
+      ::RethinkORM::Collection(self).new(cursor)
     end
 
     # Changefeed at document (if id passed) or table level
@@ -22,7 +25,7 @@ module RethinkORM::Queries
     # Yields an infinite iterator  of model events
     def self.changes(id : String? = nil, **options)
       cursor = table_query(**options) { |q| id ? q.get(id).changes : q.changes }
-      Changefeed(self).new(cursor)
+      ::RethinkORM::Changefeed(self).new(cursor)
     end
 
     # Creates a Changefeed on query
@@ -32,7 +35,7 @@ module RethinkORM::Queries
         change_query = yield q
         change_query.changes
       end
-      Changefeed(self).new(cursor)
+      ::RethinkORM::Changefeed(self).new(cursor)
     end
 
     # Establishes a changefeed of models in a RethinkDB table
@@ -40,7 +43,7 @@ module RethinkORM::Queries
     #
     def self.raw_changes(id : String? = nil, **options)
       cursor = table_query(**options) { |q| id ? q.get(id).changes : q.changes }
-      Changefeed::Raw.new(cursor)
+      ::RethinkORM::Changefeed::Raw.new(cursor)
     end
 
     # Creates a Changefeed::Raw on query
@@ -50,7 +53,7 @@ module RethinkORM::Queries
         query = yield q
         query.changes
       end
-      Changefeed::Raw.new(cursor)
+      ::RethinkORM::Changefeed::Raw.new(cursor)
     end
 
     # Lookup document by id
@@ -79,7 +82,7 @@ module RethinkORM::Queries
         q.get_all(ids, **options)
       end
 
-      Collection(self).new(cursor)
+      ::RethinkORM::Collection(self).new(cursor)
     end
 
     @[Deprecated("Use `.find_all` instead.")]
@@ -118,14 +121,14 @@ module RethinkORM::Queries
       cursor = table_query do |q|
         q.filter(&predicate)
       end
-      Collection(self).new(cursor)
+      ::RethinkORM::Collection(self).new(cursor)
     end
 
     def self.where(**attrs, &predicate : RethinkDB::DatumTerm -> RethinkDB::DatumTerm)
       cursor = table_query do |q|
         q.filter(attrs).filter(&predicate)
       end
-      Collection(self).new(cursor)
+      ::RethinkORM::Collection(self).new(cursor)
     end
 
     # Returns documents containing fields that match the attributes
@@ -139,7 +142,7 @@ module RethinkORM::Queries
       cursor = table_query(**options) do |q|
         q.filter(attrs)
       end
-      Collection(self).new(cursor)
+      ::RethinkORM::Collection(self).new(cursor)
     end
 
     # **Unsafe** method until `where` can accept more generic arguments
@@ -149,10 +152,10 @@ module RethinkORM::Queries
     #
     # Should raise/not compile on malformed query/incorrect return type to create a collection
     def self.collection_query(**options)
-      cursor = Connection.raw(**options) do |q|
+      cursor = ::RethinkORM::Connection.raw(**options) do |q|
         yield q.table(table_name)
       end
-      Collection(self).new(cursor)
+      ::RethinkORM::Collection(self).new(cursor)
     end
 
     # **Unsafe** method until `where` can accept more generic arguments
@@ -162,10 +165,10 @@ module RethinkORM::Queries
     #
     # Should raise/not compile on malformed query/incorrect return type to create a collection
     def self.raw_query(**options)
-      cursor = Connection.raw(**options) do |q|
+      cursor = ::RethinkORM::Connection.raw(**options) do |q|
         yield q
       end
-      Collection(self).new(cursor)
+      ::RethinkORM::Collection(self).new(cursor)
     end
 
     # Returns a count of all documents in the table
@@ -195,7 +198,7 @@ module RethinkORM::Queries
     # Yield a RethinkDB handle namespaced under the document table
     #
     def self.table_query(**options)
-      Connection.raw(**options) do |q|
+      ::RethinkORM::Connection.raw(**options) do |q|
         yield q.table(table_name)
       end
     end

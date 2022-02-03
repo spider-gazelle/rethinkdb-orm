@@ -24,14 +24,7 @@ module RethinkORM::Table
       {% RethinkORM::Base::TABLES << TABLE_NAME[:name] %}
     {% end %}
 
-    @@table_name : String = {{ TABLE_NAME[:name] }}
-
-    def self.table_name
-      @@table_name
-    end
-
-    def table_name
-      @@table_name
-    end
+    class_getter table_name : String = {{ TABLE_NAME[:name] }}
+    getter table_name : String = {{ TABLE_NAME[:name] }}
   end
 end

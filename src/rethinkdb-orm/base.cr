@@ -15,15 +15,17 @@ abstract class RethinkORM::Base < ActiveModel::Model
   include ActiveModel::Validation
   include ActiveModel::Callbacks
 
+  include Queries
+  include Table
   include Associations
   include Index
   include Persistence
-  include Table
-  include Queries
   include Validators
 
   TABLES  = [] of String
   INDICES = [] of NamedTuple(field: String, table: String)
+
+  class_getter table_name : String = ""
 
   macro inherited
     macro finished

@@ -41,7 +41,7 @@ module RethinkORM
           raise e unless e.message.try &.includes?("Expected BeginObject but was BeginArray")
           atom_iterator = result.as(RethinkDB::QueryResult)
             .as_a
-            .map { |object| T.from_trusted_json(object.to_json) }
+            .map { |object| T.from_trusted_json(object.to_json).as(T) }
             .each
 
           @atom_response = atom_iterator
