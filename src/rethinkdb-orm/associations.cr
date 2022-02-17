@@ -91,7 +91,7 @@ module RethinkORM::Associations
 
     def {{ child.id }}=(child)
       self.{{ assoc_var }} = child
-      self.{{ foreign_key.id }} = child.id
+      self.{{ foreign_key.id }} = child.id.as(String)
     end
 
     def reset_associations
