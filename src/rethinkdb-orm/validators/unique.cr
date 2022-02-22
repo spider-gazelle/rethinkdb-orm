@@ -5,7 +5,7 @@ module RethinkORM::Validators
         secondary_index({{ field }})
       {% end %}
 
-      validate {{ field }}, "#{ {{ field }} } should be unique", ->(this: self) do
+      validate {{ field }}, "should be unique", ->(this: self) do
         {% if scope.empty? %}
           {% scope = [field] %}
           {% proc_return_type = FIELDS[field.id][:klass].union_types.reject(&.==(Nil)).join('|').id %}

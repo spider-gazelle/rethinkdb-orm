@@ -13,7 +13,7 @@ describe RethinkORM::Validators do
       special_snowflake.valid?.should be_true
       less_special_snowflake.valid?.should be_false
 
-      less_special_snowflake.errors.first.to_s.should eq "Snowflake shape should be unique"
+      less_special_snowflake.errors.first.to_s.should eq "shape should be unique"
     end
 
     it "validates if the model is the same" do
@@ -37,7 +37,7 @@ describe RethinkORM::Validators do
       special_snowflake.valid?.should be_true
       louder_snowflake.valid?.should be_false
 
-      louder_snowflake.errors.first.to_s.should eq "Snowflake personality should be unique"
+      louder_snowflake.errors.first.to_s.should eq "personality should be unique"
     end
 
     it "passes scoped fields to transform block" do
@@ -50,7 +50,7 @@ describe RethinkORM::Validators do
 
       less_fresh = Snowflake.new(taste: "great", vibe: "rotten")
       less_fresh.valid?.should be_false
-      less_fresh.errors.first.to_s.should eq "Snowflake taste should be unique"
+      less_fresh.errors.first.to_s.should eq "taste should be unique"
     end
 
     it "passes scoped fields to transform callback" do
@@ -63,7 +63,7 @@ describe RethinkORM::Validators do
 
       less_fresh = Snowflake.new(vibe: "awful", size: 123)
       less_fresh.valid?.should be_false
-      less_fresh.errors.first.to_s.should eq "Snowflake vibe should be unique"
+      less_fresh.errors.first.to_s.should eq "vibe should be unique"
     end
   end
 end
