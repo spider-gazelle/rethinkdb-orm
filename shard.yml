@@ -1,5 +1,5 @@
 name: rethinkdb-orm
-version: 5.0.3
+version: 5.0.4
 crystal: ">= 1.0.0"
 license: MIT
 authors:
