@@ -51,4 +51,4 @@ jobs:
 
   publish:
     needs: test
-    uses: PlaceOS/.github/.github/workflows/publish-crystal-docs.yml@feat/crystal-docs
+    uses: PlaceOS/.github/.github/workflows/publish-crystal-docs.yml@main
