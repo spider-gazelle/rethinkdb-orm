@@ -228,7 +228,7 @@ module RethinkORM
       end
 
       def self.to_json(value : Time, json : JSON::Builder)
-        json.float(value.to_unix_ms/1000)
+        json.number(value.to_unix_ms/1000)
       end
     end
   end
