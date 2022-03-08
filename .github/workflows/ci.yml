@@ -20,10 +20,10 @@ jobs:
         stable: [true]
         MT: [false]
         include:
-          - crystal: 1.3.2
+          - crystal: 1.1.1
             MT: true
             stable: false
-          - crystal: 1.1.1
+          - crystal: 1.3.2
             MT: true
             stable: false
           - crystal: nightly

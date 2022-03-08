@@ -128,8 +128,8 @@ describe RethinkORM::Queries do
     tree1 = Tree.new
     tree2 = Tree.new
 
-    roots = Array(Root).new(3) do
-      Root.create!(length: (rand * 10).to_f32)
+    roots = Array(String).new(3) do
+      Root.create!(length: (rand * 10).to_f32).id.not_nil!
     end
 
     # Check all roots created
