@@ -128,12 +128,12 @@ describe RethinkORM::Queries do
     tree1 = Tree.new
     tree2 = Tree.new
 
-    roots = 3.times.to_a.compact_map do
-      Root.create!(length: (rand * 10).to_f32).id
+    roots = Array(Root).new(3) do
+      Root.create!(length: (rand * 10).to_f32)
     end
 
     # Check all roots created
-    roots.size.should eq 3
+    roots.none?(Nil).should be_true
 
     tree1.roots = roots[0..1]
     tree2.roots = roots[1..2]
