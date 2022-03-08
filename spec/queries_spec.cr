@@ -99,7 +99,7 @@ describe RethinkORM::Queries do
 
       correct_count.should eq num_correct
       incorrect_count.should eq num_incorrect
-      total.should eq (num_correct + num_incorrect)
+      total.should eq(num_correct + num_incorrect)
 
       correct_documents.each &.destroy
       incorrect_documents.each &.destroy

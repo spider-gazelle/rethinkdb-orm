@@ -33,7 +33,7 @@ describe RethinkORM::Base do
   it "should support serialisation" do
     base = BasicModel.create(name: "joe")
     base_id = base.id
-    JSON.parse(base.to_json).should eq JSON.parse({name: "joe", age: 0, hash: {} of Nil => Nil, id: base_id}.to_json)
+    base.to_json.should eq({name: "joe", age: 0, hash: {} of Nil => Nil, id: base_id}.to_json)
 
     base.destroy
   end
@@ -44,7 +44,7 @@ describe RethinkORM::Base do
       changed_attributes = base.changed_attributes
 
       base.name = "change"
-      base.changed_attributes.size.should eq (changed_attributes.size + 1)
+      base.changed_attributes.size.should eq(changed_attributes.size + 1)
 
       base = BasicModel.new(name: "bob")
       base.changed_attributes.empty?.should be_false

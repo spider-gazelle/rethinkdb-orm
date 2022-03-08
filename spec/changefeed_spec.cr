@@ -64,7 +64,7 @@ module RethinkORM
       BasicModel.create!(name: "bubbles")
 
       names.should eq ["ren", "stimpy", "mr. horse"]
-      events.should eq ([
+      events.should eq([
         RethinkORM::Changefeed::Event::Created,
         RethinkORM::Changefeed::Event::Created,
         RethinkORM::Changefeed::Event::Created,
@@ -136,7 +136,7 @@ module RethinkORM
         third.destroy
 
         documents.should eq [first, second, third].map { |model| JSON.parse(model.to_json).as_h }
-        events.should eq ([
+        events.should eq([
           RethinkORM::Changefeed::Event::Created,
           RethinkORM::Changefeed::Event::Created,
           RethinkORM::Changefeed::Event::Created,

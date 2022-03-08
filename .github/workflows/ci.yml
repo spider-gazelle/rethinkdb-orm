@@ -6,17 +6,7 @@ on:
 
 jobs:
   style:
-    name: Style
-    runs-on: ubuntu-latest
-    container: crystallang/crystal:latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Format
-        run: crystal tool format --check
-      - name: Lint
-        uses: crystal-ameba/github-action@v0.2.12
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: PlaceOS/.github/.github/workflows/crystal-style.yml@main
 
   test:
     runs-on: ubuntu-latest
@@ -26,12 +16,11 @@ jobs:
       fail-fast: false
       matrix:
         crystal:
-          - 1.0.0
-          - 1.1.1
+          - 1.3.2
         stable: [true]
         MT: [false]
         include:
-          - crystal: 1.0.0
+          - crystal: 1.3.2
             MT: true
             stable: false
           - crystal: 1.1.1
@@ -51,7 +40,8 @@ jobs:
           - 28015:28015
     steps:
       - uses: actions/checkout@v2
-      - uses: oprypin/install-crystal@v1
+      - name: Install crystal
+        uses: crystal-lang/install-crystal@v1.6.0
         with:
           crystal: ${{ matrix.crystal }}
       - run: shards install --ignore-crystal-version
@@ -63,20 +53,5 @@ jobs:
         run: crystal spec --error-trace -v --order=random --no-color -Dpreview_mt
 
   publish:
-    name: Publish Documentation
-    if: contains('refs/tags', github.ref)
-    runs-on: ubuntu-latest
-    container: crystallang/crystal:latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: shards install --ignore-crystal-version
-      - name: Run `crystal docs`
-        run: crystal docs --source-url-pattern=https://github.com/spider-gazelle/rethinkdb-orm/tree/$(shards version)
-      - name: Publish to GitHub Pages
-        uses: crazy-max/ghaction-github-pages@v2
-        with:
-          target_branch: docs
-          build_dir: docs
-          commit_message: "docs: update for ${{ github.ref }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    needs: test
+    uses: PlaceOS/.github/.github/workflows/publish-crystal-docs.yml@main
