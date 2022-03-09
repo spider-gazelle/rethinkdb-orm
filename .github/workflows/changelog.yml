@@ -1,0 +1,10 @@
+name: Changelog
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  generate:
+    uses: PlaceOS/.github/.github/workflows/changelog.yml@main
