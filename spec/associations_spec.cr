@@ -80,14 +80,13 @@ describe RethinkORM::Associations do
       car = Car.create!(brand: "Toyota")
       car.persisted?.should be_true
 
-      wheels = [] of Wheel
-      4.times do |v|
-        wheel = Wheel.new(width: 10 + v)
-        wheel.car = car
-        wheel = wheel.save!
-        wheel.persisted?.should be_true
-        car.id.should eq wheel.car_id
-        wheels << wheel
+      wheels = Array.new(4) do |v|
+        Wheel.new(width: 10 + v).tap do |wheel|
+          wheel.car = car
+          wheel = wheel.save!
+          wheel.persisted?.should be_true
+          car.id.should eq wheel.car_id
+        end
       end
 
       # Check the associations can be retrieved
