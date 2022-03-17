@@ -1,0 +1,27 @@
+#! /usr/bin/env bash
+
+set -eu
+
+# this function is called when Ctrl-C is sent
+function trap_ctrlc ()
+{
+    docker-compose down &> /dev/null
+    exit 2
+}
+
+# initialise trap to call trap_ctrlc function
+# when signal 2 (SIGINT) is received
+trap "trap_ctrlc" 2
+
+docker-compose pull -q
+
+exit_code="0"
+
+docker-compose run \
+        --rm \
+        test $@ \
+    || exit_code="$?"
+
+docker-compose down &> /dev/null
+
+exit ${exit_code}
