@@ -8,8 +8,12 @@ module RethinkORM::Associations
     {% association_method = parent_name.id.symbolize %}
     {% assoc_var = "__#{parent_name.id}".id %}
 
-    attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
+    # Prevent association from being serialised
+    @[JSON::Field(ignore: true)]
+    @[YAML::Field(ignore: true)]
     property {{ assoc_var }} : {{ parent_class }}?
+    attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
+
     destroy_callback({{ association_method }}, {{dependent}})
 
     {% if create_index %}
@@ -62,8 +66,11 @@ module RethinkORM::Associations
     {% foreign_key = child + "_id" %}
     {% association_method = child.id.symbolize %}
 
-    attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}
+    # Prevent association from being serialised
+    @[JSON::Field(ignore: true)]
+    @[YAML::Field(ignore: true)]
     property {{ assoc_var }} : {{ child_class }}?
+    attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}
     destroy_callback({{ association_method }}, {{dependent}})
 
     {% if create_index %}
