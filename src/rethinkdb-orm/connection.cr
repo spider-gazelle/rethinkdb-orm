@@ -88,7 +88,7 @@ module RethinkORM
 
     # Lazily check for and create non-existant resources in rethink
     #
-    # TODO: support more configuration for db/table sharding and replication
+    # TODO: Support more configuration for RethinkDB sharding and replication
     protected def self.ensure_resources!(connection)
       return if @@resource_check
 
@@ -135,7 +135,7 @@ module RethinkORM
 
       table_queries.each(&.get)
 
-      # TODO: Error check
+      # TODO: Thoroughly check for errors after `Connection.ensure_resources`
       @@resource_check = true
     end
 
