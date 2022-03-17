@@ -54,8 +54,6 @@
 
 - **persistence**: use replace to ensure fields can be set to nil
 
-## v3.2.3 (2021-03-23)
-
 ## v3.2.2 (2021-02-16)
 
 ### Fix
@@ -110,8 +108,6 @@
 
 - **persistence**: correctly set _new_flag on successful persistence
 
-## v2.10.0 (2020-06-29)
-
 ## v2.9.1 (2020-06-15)
 
 ### Fix
@@ -131,10 +127,6 @@
 
 - **connection**: ignore 'Index already exists' errors
 
-## v2.8.1 (2020-05-11)
-
-## v2.8.0 (2020-04-10)
-
 ## v2.7.4 (2020-04-09)
 
 ### Fix
@@ -147,14 +139,6 @@
 ### Fix
 
 - **queries**: cast `exists?` QueryResult to bool
-
-## v2.7.2 (2020-03-31)
-
-## v2.7.1 (2020-03-31)
-
-## v2.7.0 (2020-03-31)
-
-## v2.6.6 (2020-03-30)
 
 ## v2.6.5 (2020-03-28)
 
@@ -194,12 +178,6 @@
 
 - **base**: prevent mass assignment on document id
 
-## v2.5.3 (2020-03-10)
-
-## v2.5.2 (2020-03-09)
-
-## v2.5.1 (2020-03-06)
-
 ## v2.5.0 (2020-03-05)
 
 ### Refactor
@@ -212,8 +190,6 @@
 ### Fix
 
 - **table**: remove explicit `@@table_name` instantiation before setting via macro
-
-## v2.4.3 (2020-02-20)
 
 ## v2.4.2 (2020-02-03)
 
@@ -228,21 +204,3 @@
 
 - **queries**: fix `where` query attribute merge
 - **associations**: model#parent returns nil for parent of unpersisted model
-
-## v2.0.0 (2019-04-18)
-
-## v1.1.0 (2019-03-26)
-
-## v1.0.0 (2019-02-27)
-
-## v0.5.0 (2019-02-26)
-
-## v0.4.1 (2019-02-25)
-
-## v0.4.0 (2019-02-22)
-
-## v0.3.0 (2019-02-21)
-
-## v0.2.0 (2019-02-20)
-
-## v0.1.0 (2019-02-19)
