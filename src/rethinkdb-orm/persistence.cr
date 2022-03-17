@@ -193,8 +193,6 @@ module RethinkORM::Persistence
             .replace(doc, **options)
         end
 
-        # TODO: Extend active-model to include previous changes
-        # TODO: Update associations
         replaced = response["replaced"]?.try(&.as_i?) || 0
         updated = response["updated"]?.try(&.as_i?) || 0
         unchanged = response["unchanged"]?.try(&.as_i?) || 0
@@ -216,8 +214,8 @@ module RethinkORM::Persistence
       run_save_callbacks do
         raise RethinkORM::Error::DocumentInvalid.new(self) unless valid?
 
-        # TODO: Allow user to tag an attribute as primary key.
-        #       Requires either changing default primary key or using secondary index
+        # TODO: Allow user to specify an attribute as a primary key.
+        # Requires either changing default primary key or using secondary index
         @id = @@uuid_generator.next(self) if @id.presence.nil?
 
         response = Connection.raw_json(self.to_json) do |q, doc|
