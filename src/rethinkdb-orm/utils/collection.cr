@@ -12,6 +12,18 @@ module RethinkORM
       @iterator = CollectionIterator(T).new(iterator)
     end
 
+    def to_json(json : JSON::Builder) : Nil
+      json.array do
+        each(&.to_json(json))
+      end
+    end
+
+    def to_yaml(yaml : YAML::Nodes::Builder) : Nil
+      yaml.sequence(reference: self) do
+        each(&.to_yaml(yaml))
+      end
+    end
+
     # :nodoc:
     class CollectionIterator(T)
       include Iterator(T)

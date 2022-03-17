@@ -8,7 +8,7 @@ class RethinkORM::AssociationCollection(Owner, Target)
 
   delegate :find, :find!, to: Target
 
-  delegate :each, to: :all
+  delegate :each, :to_yaml, :to_json, to: :all
 
   def initialize(@owner, foreign_key = nil)
     @foreign_key = !foreign_key ? "#{Owner.table_name}_id" : foreign_key.to_s
