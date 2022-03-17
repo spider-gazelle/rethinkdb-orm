@@ -1,0 +1,32 @@
+version: "3.9"
+
+# YAML Anchors
+
+x-rethinkdb-client-env: &rethinkdb-client-env
+  RETHINKDB_HOST: ${RETHINKDB_HOST:-rethink}
+  RETHINKDB_PORT: ${RETHINKDB_PORT:-28015}
+  RETHINKDB_DB: ${RETHINKDB_DB:-place_development}
+
+services:
+  test:
+    image: placeos/service-spec-runner:${CRYSTAL_VERSION:-1.3.2}
+    volumes:
+      - ${PWD}/spec:/app/spec
+      - ${PWD}/src:/app/src
+      - ${PWD}/lib:/app/lib
+      - ${PWD}/shard.lock:/app/shard.lock
+      - ${PWD}/shard.override.yml:/app/shard.override.yml
+      - ${PWD}/shard.yml:/app/shard.yml
+      - ${PWD}/coverage:/app/coverage
+    depends_on:
+      - rethink
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      GITHUB_ACTION: ${GITHUB_ACTION:-}
+      <<: *rethinkdb-client-env
+
+  rethink:
+    image: rethinkdb:${RETHINKDB_VERSION:-2.4}
+    restart: always
+    hostname: rethink
