@@ -1,3 +1,5 @@
+require "json"
+require "yaml"
 require "./utils/association_collection"
 
 module RethinkORM::Associations
@@ -13,7 +15,10 @@ module RethinkORM::Associations
     @[YAML::Field(ignore: true)]
     @{{ assoc_var }} : {{ parent_class }}?
 
+    @[JSON::Field(ignore: true)]
+    @[YAML::Field(ignore: true)]
     property {{ assoc_var }} : {{ parent_class }}?
+
     attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
 
     destroy_callback({{ association_method }}, {{dependent}})
@@ -73,8 +78,12 @@ module RethinkORM::Associations
     @[YAML::Field(ignore: true)]
     @{{ assoc_var }} : {{ child_class }}?
 
+    @[JSON::Field(ignore: true)]
+    @[YAML::Field(ignore: true)]
     property {{ assoc_var }} : {{ child_class }}?
+
     attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}
+
     destroy_callback({{ association_method }}, {{dependent}})
 
     {% if create_index %}
