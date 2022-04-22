@@ -11,6 +11,8 @@ module RethinkORM::Associations
     # Prevent association from being serialised
     @[JSON::Field(ignore: true)]
     @[YAML::Field(ignore: true)]
+    @{{ assoc_var }} : {{ parent_class }}?
+
     property {{ assoc_var }} : {{ parent_class }}?
     attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}, parent: {{ parent_class.id.stringify }}, es_type: "keyword"
 
@@ -69,6 +71,8 @@ module RethinkORM::Associations
     # Prevent association from being serialised
     @[JSON::Field(ignore: true)]
     @[YAML::Field(ignore: true)]
+    @{{ assoc_var }} : {{ child_class }}?
+
     property {{ assoc_var }} : {{ child_class }}?
     attribute {{ foreign_key.id }} : String {% unless presence %} | Nil {% end %}
     destroy_callback({{ association_method }}, {{dependent}})
