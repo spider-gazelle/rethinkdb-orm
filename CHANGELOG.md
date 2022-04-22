@@ -1,3 +1,9 @@
+## v6.0.3 (2022-04-22)
+
+### Fix
+
+- **associations**: apply ignore annotation to instance variable
+
 ## v6.0.2 (2022-03-17)
 
 ### Fix
