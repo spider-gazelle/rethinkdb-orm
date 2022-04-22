@@ -1,3 +1,9 @@
+## v6.0.4 (2022-04-22)
+
+### Fix
+
+- **associations**: apply ignore annotation to property
+
 ## v6.0.3 (2022-04-22)
 
 ### Fix
