@@ -14,7 +14,6 @@ services:
       - ${PWD}/spec:/app/spec
       - ${PWD}/src:/app/src
       - ${PWD}/lib:/app/lib
-      - ${PWD}/shard.lock:/app/shard.lock
       - ${PWD}/shard.override.yml:/app/shard.override.yml
       - ${PWD}/shard.yml:/app/shard.yml
       - ${PWD}/coverage:/app/coverage
